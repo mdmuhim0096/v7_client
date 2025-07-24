@@ -88,8 +88,9 @@ export default function VoiceButton({ onAudioReady }) {
 
     return (
         <div onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp} className='w-12 h-10 rounded-lg bg-rose-500 flex justify-center items-center' id='mic' >
+            onMouseUp={handleMouseUp} onTouchStart={handleMouseDown} onTouchEnd={handleMouseUp} className='w-12 h-10 rounded-lg bg-rose-500 flex justify-center items-center' id='mic' >
             <Mic />
         </div>
     );
 }
+

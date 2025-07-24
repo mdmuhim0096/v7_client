@@ -88,28 +88,29 @@ const ChatRoom = () => {
         setInputText(isReplay ? "write you'r replay text" : "write message...!");
     }, [load, isReplay]);
 
-    // useEffect(() => {
-    //     const handleIncomingCall = (data) => {
-    //         if (data.friendId === localStorage.getItem("myId")) {
-    //             localStorage.setItem("collerName", data?.myName)
-    //             localStorage.setItem("collerImage", data?.myImage)
-    //             document.getElementById("calltone")?.play();
-    //             localStorage.setItem("uniqueId", data?.uniqueId)
-    //             navigate("/videocall");
-    //         }
-    //     };
-    //     socket.on("incoming_call", handleIncomingCall);
-    //     return () => {
-    //         socket.off("incoming_call", handleIncomingCall);
-    //     };
-    // }, [socket, navigate]);
-
     useEffect(() => {
         const reciveMessage = (e) => {
             get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
         }
         socket.on("aftersent", reciveMessage);
         return () => { socket.off("aftersent", reciveMessage) }
+    }, [])
+
+    useEffect(() => {
+        const greceiveMessage = (e) => {
+            get_group_chats(localStorage.getItem("groupId"));
+        }
+        socket.on("gaftersent", greceiveMessage)
+        return () => { socket.off("gaftersent", greceiveMessage) }
+    }, [])
+
+    useEffect(() => {
+        const handelBlock = (e) => {
+            toast.error(e);
+            setTimeout(() => { window.location.reload() }, 2020);
+        }
+        socket.on("block_user", handelBlock);
+        return () => { socket.off("block_user", handelBlock) }
     }, [])
 
     useEffect(() => {
@@ -159,7 +160,6 @@ const ChatRoom = () => {
     }, [])
 
     async function get_chats(riciver, sender) {
-        setLoadEnd(false);
         await axios.post(server_port + "/api/people/getChat", { riciver, sender })
             .then(res => {
                 setChat(res?.data?.data);
@@ -208,28 +208,6 @@ const ChatRoom = () => {
         getOurDesign(localStorage.getItem("myId"), localStorage.getItem("userId"));
     }, [load])
 
-    // useEffect(() => {
-    //     const __load_data__ = (e) => {
-    //         get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
-    //         get_my_friends();
-    //         getOurDesign(localStorage.getItem("myId"), localStorage.getItem("userId"));
-    //         setLoad(e);
-    //         if (isCahtTab === false) {
-    //             get_group_chats(localStorage.getItem("groupId"));
-    //         }
-    //         setTimeout(() => {
-    //             topToBottom()
-    //             setTimeout(() => { topToBottom() }, 100)
-    //         }, 400)
-    //     };
-
-    //     socket.on("__load_data__", __load_data__);
-    //     return () => {
-    //         socket.off("__load_data__", __load_data__);
-    //         socket.offAny();
-    //     };
-
-    // }, [load]);
 
     function goToBottom() {
         const chat_container = document.getElementById("chat_container");
@@ -404,7 +382,7 @@ const ChatRoom = () => {
         "font-josefin",
         "font-raleway"];
 
-    const [isBar, setIsBar] = useState(false);
+    const [isBar, setIsBar] = useState(true);
 
     async function safarateUser(id) {
         const res = await axios.get(server_port + "/api/people/friendData/" + id);
@@ -424,8 +402,10 @@ const ChatRoom = () => {
     function blockUser(key) {
         const friendId = localStorage.getItem("userId"), myId = localStorage.getItem("myId");
         axios.post(server_port + "/api/friend/" + key, { friendId, myId })
-        socket.emit("__load_data__");
+        socket.emit("block_user", localStorage.getItem("myName") + " " + key + " you");
+        get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
         getOurDesign(localStorage.getItem("myId"), localStorage.getItem("userId"));
+
     }
 
     function createGroup() {
@@ -440,33 +420,35 @@ const ChatRoom = () => {
     const [groupChats, setGroupChat] = useState([]);
 
     async function get_group_chats(id) {
-        const res = await axios.get(server_port + "/api/gchat/getchat/" + id);
-        setGroupChat(res.data.chats);
+        await axios.get(server_port + "/api/gchat/getchat/" + id).then(res => {
+            setGroupChat(res.data.chats);
+            setLoadEnd(true);
+            setTimeout(() => {
+                goToBottom();
+            }, 100)
+        })
+
     }
 
     function uploadmediaInGroup(group, file) {
         const type = getMediaType(file, false);
         const dateTime = getTime();
         const realTime = dateTime.date + " " + dateTime.actual_time;
-        console.log(type, media);
         const fd = new FormData();
+        setIsUploading(true);
         fd.append(`${type}`, media);
         fd.append("group", group);
         fd.append("messageType", type);
         fd.append("sender", localStorage.getItem("myId"));
         fd.append("realTime", realTime);
-        axios.post(server_port + "/api/gchat/createmedia", fd);
+        axios.post(server_port + "/api/gchat/createmedia", fd).then(res => {
+            socket.emit("gmessage", null);
+            setIsUploading(false);
+            toast.success("uploaded");
+            get_group_chats(localStorage.getItem("groupId"));
+        });
         setMedia(undefined);
         setFileUrl(null);
-
-        setTimeout(() => {
-            get_group_chats(localStorage.getItem("groupId"));
-            socket.emit("__load_data__");
-            setTimeout(() => {
-                topToBottom();
-                setLoad("$")
-            }, 602);
-        }, 140);
     }
 
     function sendMsaageInGroup(group) {
@@ -477,15 +459,21 @@ const ChatRoom = () => {
 
         const dateTime = getTime();
         const realTime = dateTime.date + " " + dateTime.actual_time;
-        axios.post(server_port + "/api/gchat/createtext", { group, messageType: "text", sender: localStorage.getItem("myId"), content: message, realTime });
+        axios.post(server_port + "/api/gchat/createtext", { group, messageType: "text", sender: localStorage.getItem("myId"), content: message, realTime }).then(res => {
+            socket.emit("gmessage", null);
+        })
         setMessage("");
         get_group_chats(localStorage.getItem("groupId"));
-        socket.emit("__load_data__");
-        setTimeout(() => {
-            topToBottom();
-            setLoad("$")
-        }, 610)
     }
+
+    useEffect(() => {
+        const handelGroupChat = (e) => {
+            get_group_chats(localStorage.getItem("groupId"));
+        }
+
+        socket.on("gmessage", handelGroupChat);
+        return () => { socket.off("gmessage", handelGroupChat) }
+    }, [])
 
     useEffect(() => {
         if (isCahtTab === false) {
@@ -545,6 +533,7 @@ const ChatRoom = () => {
     }
 
     async function vioceHandeler(e) {
+        setIsUploading(true);
         const dateTime = getTime();
         const realTime = dateTime.date + " " + dateTime.actual_time;
         let formData = new FormData();
@@ -561,7 +550,18 @@ const ChatRoom = () => {
         formData.append("time", realTime);
         formData.append("senderId", sender)
         formData.append("recevireId", riciver)
-        await axios.post(url, formData);
+        await axios.post(url, formData).then(res => {
+            setTimeout(() => {
+                setIsUploading(false);
+                if (isCahtTab === true) {
+                    socket.emit("aftersent", null);
+                } else {
+                    socket.emit("gaftersent", null);
+                    get_group_chats(localStorage.getItem("groupId"));
+                }
+                get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
+            }, 100)
+        });
     }
 
     useEffect(() => {
@@ -627,7 +627,7 @@ const ChatRoom = () => {
         <div className='sm:flex h-screen overflow-y-auto'>
             <ToastContainer
                 position="top-right"
-                autoClose={3000}
+                autoClose={1000}
                 hideProgressBar={false}
                 newestOnTop={false}
                 closeOnClick
@@ -638,8 +638,8 @@ const ChatRoom = () => {
             />
 
             <span className={`sm:hidden sticky top-0 ${!isBar ? "hidden" : ""}`}><Navbar /></span>
-            <div className={`flex flex-col sm:w-3/12  ${isBar ? '' : 'hidden'} sm:block overflow-y-auto h-screen`}>
-                <div className={`w-full h-auto text-white `} >{friends?.map((data, index) => (
+            <div className={`flex flex-col sm:w-3/12 lg:block overflow-y-auto h-[91.4%] sm:h-screen  ${isBar ? "" : "hidden"}`}>
+                <div className={`w-full h-auto text-white`} >{friends?.map((data, index) => (
                     <div onClick={() => {
                         localStorage.setItem("userId", data?._id);
                         myData_();
@@ -647,24 +647,28 @@ const ChatRoom = () => {
                         setLoad(load + 1);
                         getOurDesign(localStorage.getItem("myId"), localStorage.getItem("userId"));
                         doChangeTextColor();
-                        get_chats(data?._id, localStorage.getItem("myId"));
+                        get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
                         setIsBar(false);
                         setIsChatTap(true)
+                        setLoadEnd(false);
                     }}
-                        className='w-full flex items-center gap-4 my-4 cursor-pointer p-2 hover:bg-indigo-950 hover:border-blue hover:border rounded-md' key={index}>
-                        <img className='w-12 h-12 rounded-full' src={data?.image} />
-                        <div>
-                            <h6 className='text-xs py-1 text-gray-600'>your friend</h6>
-                            <h4 className='text-sm'>{data?.name}</h4>
+                        className='flex justify-between items-center cursor-pointer my-3 hover:bg-gray-800 p-2' key={index}>
+
+                        <div className='flex w-full items-center gap-2'>
+                            <img className='w-12 h-12 rounded-full' src={data?.image} />
+                            <div>
+                                <h6 className='text-xs py-1 text-gray-600'>your friend</h6>
+                                <h4 className='text-sm'>{data?.name}</h4>
+                            </div>
                         </div>
-                        <div className={data?.isActive ? "text-green-500" : "text-gray"}>{data?.isActive ? "online" : "offline"}</div>
+                        <div className='flex justify-center items-center w-[15%] '>{data?.isActive ? <span className='w-3 h-3 rounded-full bg-green-500 inline-block'></span> : null}</div>
                     </div>
                 ))}
                 </div>
 
                 <div className={`${groups?.length <= 0 ? "hidden" : ""}`}>
                     <hr />
-                    <h5>groups</h5>
+                    <h5 className='my-1 mb-4'>Groups</h5>
                     {groups?.map((data, index) => (
                         <div key={index} className='cursor-pointer' onClick={() => {
                             localStorage.setItem("userImage", data?.groupImage);
@@ -675,10 +679,11 @@ const ChatRoom = () => {
                             setIsChatTap(false);
                             setGroupDesign(data?.style);
                             localStorage.setItem("admin", data?.admin);
-                            setIsBar(false)
+                            setIsBar(false);
+                            setLoadEnd(false);
                         }}>
-                            <div className='flex justify-start items-center '>
-                                <img className='w-12 h-12 rounded-full' src={server_port + "/" + data?.groupImage} alt="" />
+                            <div className='flex justify-start items-center gap-4 hover:bg-gray-800 p-2'>
+                                <img className='w-12 h-12 rounded-full' src={data?.groupImage.includes("group.png") ? server_port + "/" + data?.groupImage : data?.groupImage} />
                                 <h3>{data?.name}</h3>
                             </div>
 
@@ -687,7 +692,11 @@ const ChatRoom = () => {
                 </div>
             </div>
 
-            <div className={`w-full h-full relative overflow-x-hidden text-white ${isBar ? 'hidden' : 'block'}`}>
+            <div className={`w-full h-full bg-purple-800 justify-center hidden items-center ${isBar ? "sm:flex" : "hidden"}`}>
+                <h1>select one</h1>
+            </div>
+
+            <div className={`w-full h-full relative overflow-x-hidden text-white ${!isBar ? "" : "hidden"}`}>
 
                 <div id='ourSettings' className={`w-full sm:w-10/12 h-[90vh] border fixed backdrop-blur-sm z-50 duration-500 ${showSetting && isCahtTab ? "ml-0" : "ml-[100%]"} overflow-y-auto`}>
                     <div className='sticky top-0 left-0 w-full h-auto backdrop-blur-3xl' onClick={() => { setShowSetting(false) }}>
@@ -785,7 +794,7 @@ const ChatRoom = () => {
                                 <div className='w-12 h-12 relative rounded-xl flex justify-center items-center'>
                                     <input type="file" className='absolute w-full h-full bg-slate-800 z-50 opacity-0' onChange={(e) => { setGroupImage(e.target.files[0]) }} />
                                     <Plus className='absolute z-10' />
-                                    <img src={server_port + "/" + localStorage.getItem("userImage")} className='absolute w-full h-full rounded-xl' />
+                                    <img src={localStorage.getItem("userImage")} className='absolute w-full h-full rounded-xl' />
                                 </div>
                                 <div className={`${groupImage ? "" : "hidden"} flex items-center gap-5`}>
                                     <button onClick={changeGroupImage} >update</button>
@@ -814,7 +823,7 @@ const ChatRoom = () => {
                     </div>
                 </div>
 
-                <div className={`w-full h-[90vh] border border-teal-600 relative ${isBar ? 'hidden' : 'block'}`} >
+                <div className={`w-full h-[90vh] relative`} >
 
                     <div className={`${isRecording ? "" : "hidden"}`}>
                         <Animation />
@@ -830,9 +839,9 @@ const ChatRoom = () => {
                             <LoaderContainer type={"upload"} loadEnd={isUploading ? false : true} />
                         </span>
                         <div className='w-full flex items-center p-2 bg-indigo-950 rounded-lg justify-between sticky top-0 z-20'>
-                            <ArrowLeft className='sm:hidden' onClick={() => { setIsBar(true) }} />
+                            <ArrowLeft className='lg:hidden' onClick={() => { setIsBar(true) }} />
                             <div className='flex items-center justify-start gap-4'>
-                                <img className='rounded-full w-10 h-10' src={localStorage.getItem("userImage")} alt="" />
+                                <img className='rounded-full w-10 h-10' src={localStorage.getItem("userImage").includes("group.png") ? server_port + "/" + localStorage.getItem("userImage") : localStorage.getItem("userImage")} alt="" />
                                 <h1 className='text-center my-2'>{localStorage.getItem("userName")}</h1>
                             </div>
                             <div className='flex gap-5'>
@@ -859,46 +868,48 @@ const ChatRoom = () => {
                                         <img className={`w-7 h-7 user rounded-full absolute bottom-1 ${message?.senderId === sender ? "float-right right-0" : "float-left"}`} src={message?.user?.image} />
                                         <div className={`mx-10 chat-bubble cursor-pointer sm:max-w-96`}>
                                             {
-                                                message?.mediaUrl?.includes("image") ? (<img src={message?.mediaUrl} className={`rounded-xl w-full hover:scale-105 duration-150 ${!message?.mediaUrl?.includes("image") ? "hidden" : ""}`} />) : message?.mediaUrl?.includes(".mp3") || message?.mediaUrl?.includes(".webm") ? (<audio controls className={`${!message?.mediaUrl?.includes(".mp3" || ".mp3") ? "hidden" : ""} w-full h-6`}>
-                                                    <source src={message?.mediaUrl} type="audio/mp3" />
-                                                </audio>)
-                                                    : message?.mediaUrl?.includes(".mp4") ? (<video className={!message?.mediaUrl?.includes(".mp4") ? "hidden" : ""} controls>
-                                                        <source src={message?.mediaUrl} type="video/mp4" />
-                                                    </video>) : message?.mediaUrl === "unsent" ? "unsent" :
-                                                        message?.link?.isLink ? (<a href={message?.link?.link} target='_blank' className='text-blue italic underline'><ShortText text={message?.link?.link} dot={4} width={window.innerWidth} range={15} /></a>) : message?.link?.link === "unsent" ? "unsent" : message?.call?.callType ? (<div>
-                                                            <div className='flex justify-between items-center'>
-                                                                <span className='capitalize'>{message?.call?.callType}</span>
-                                                                <h6>{message?.call?.duration}</h6>
-                                                                {message.call?.callType === "audio" ? <Phone className='' /> : <Video />}
-                                                            </div>
-                                                        </div>) : message?.mediaUrl == "share" ?
-
-                                                            <div>
-                                                                {message?.share?.image == true ? <img src={message?.share?.media} className='w-full h-full rounded-xl' /> : message?.share?.video == true ? <video src={message?.share?.media} controls className='w-full h-full rounded-xl'></video> : null}
-                                                                <Link to={"/get_post_by_notification"} state={{ postId: message?.share?._id }}>go to comment</Link>
-                                                            </div>
-
-                                                            : message?.isReplay === true ?
-                                                                <div>
-                                                                    <h4 className={`absolute text-green-400 ${message?.senderId === sender ? "-top-4 -left-4 -rotate-45" : "-top-4 -right-4 rotate-45"}`}>reply</h4>
-                                                                    {message?.replay?.chatId?.mediaUrl == "share" ?
-                                                                        <div>
-                                                                            {message?.replay?.chatId?.share?.image == true ? <img src={server_port + "/" + message?.replay?.chatId?.share?.media} className='w-full h-full rounded-xl' /> : <video src={server_port + message?.replay.chatId?.share?.media} controls className='w-full h-full rounded-xl'></video>}
-                                                                        </div> :
-                                                                        <div>
-                                                                            {message?.replay?.chatId?.mediaUrl?.includes("image") ?
-                                                                                <img src={server_port + "/" + message?.replay?.chatId?.mediaUrl} alt="" /> : message?.replay?.chatId?.mediaUrl?.includes("video") ? <video src={server_port + "/" + message?.replay.chatId?.mediaUrl} controls></video> : message?.replay?.chatId?.mediaUrl?.includes("audio") ? <audio src={message?.replay.chatId?.mediaUrl} controls /> : message?.replay.chatId.messageTextull}
-
-                                                                        </div>
-                                                                    }
-                                                                    <div className='flex items-center justify-between'>
-                                                                        <h4>{message?.replay?.chatId?.messageText}</h4>
-                                                                        <span>{message?.replay?.text}</span>
-                                                                        {message?.replay?.chatId?.mediaUrl == "share" ? <Link className='text-blue-300' to={"/get_post_by_notification"} state={{ postId: message?.replay.chatId?.share?._id }}>go to comment</Link> : null}
-                                                                        {console.log(chats)}
-                                                                    </div>
+                                                message?.mediaUrl?.includes("image") ? (<img src={message?.mediaUrl} className={`rounded-xl w-full hover:scale-105 duration-150 ${!message?.mediaUrl?.includes("image") ?
+                                                    "hidden" : ""}`} />) :
+                                                    message?.mediaUrl?.includes(".mp3") ||
+                                                        message?.mediaUrl?.includes(".webm") ?
+                                                        <audio src={message?.mediaUrl} controls className='w-full h-6' ></audio>
+                                                        : message?.mediaUrl?.includes(".mp4") ? (<video className={`${!message?.mediaUrl?.includes(".mp4") ? "hidden" : ""}`} controls>
+                                                            <source src={message?.mediaUrl} type="video/mp4" />
+                                                        </video>) : message?.mediaUrl === "unsent" ? "unsent" :
+                                                            message?.link?.isLink ? (<a href={message?.link?.link} target='_blank' className='text-blue italic underline'><ShortText text={message?.link?.link} dot={4} width={window.innerWidth} range={15} /></a>) : message?.link?.link === "unsent" ? "unsent" : message?.call?.callType ? (<div>
+                                                                <div className='flex justify-between items-center'>
+                                                                    <span className='capitalize'>{message?.call?.callType}</span>
+                                                                    <h6>{message?.call?.duration}</h6>
+                                                                    {message.call?.callType === "audio" ? <Phone className='' /> : <Video />}
                                                                 </div>
-                                                                : (<span className={`${ourDesign?.styles?.text?.italic ? "italic" : ""} ${ourDesign?.styles?.text?.color} ${ourDesign?.styles?.text?.family}`}>{message?.messageText}</span>)
+                                                            </div>) : message?.mediaUrl == "share" ?
+
+                                                                <div>
+                                                                    {message?.share?.image == true ? <img src={message?.share?.media} className='w-full h-full rounded-xl' /> : message?.share?.video == true ? <video src={message?.share?.media} controls className='w-full h-full rounded-xl'></video> : null}
+                                                                    <Link to={"/get_post_by_notification"} state={{ postId: message?.share?._id }}>go to comment</Link>
+                                                                </div>
+
+                                                                : message?.isReplay === true ?
+                                                                    <div>
+                                                                        <h4 className={`absolute text-green-400 ${message?.senderId === sender ? "-top-4 -left-4 -rotate-45" : "-top-4 -right-4 rotate-45"}`}>reply</h4>
+                                                                        {message?.replay?.chatId?.mediaUrl == "share" ?
+                                                                            <div>
+                                                                                {message?.replay?.chatId?.share?.image == true ? <img src={server_port + "/" + message?.replay?.chatId?.share?.media} className='w-full h-full rounded-xl' /> : <video src={server_port + message?.replay.chatId?.share?.media} controls className='w-full h-full rounded-xl'></video>}
+                                                                            </div> :
+                                                                            <div>
+                                                                                {message?.replay?.chatId?.mediaUrl?.includes("image") ?
+                                                                                    <img src={server_port + "/" + message?.replay?.chatId?.mediaUrl} alt="" /> : message?.replay?.chatId?.mediaUrl?.includes("video") ? <video src={server_port + "/" + message?.replay.chatId?.mediaUrl} controls></video> : message?.replay?.chatId?.mediaUrl?.includes("audio") ? <audio src={message?.replay.chatId?.mediaUrl} controls /> : message?.replay.chatId.messageTextull}
+
+                                                                            </div>
+                                                                        }
+                                                                        <div className='flex items-center justify-between'>
+                                                                            <h4>{message?.replay?.chatId?.messageText}</h4>
+                                                                            <span>{message?.replay?.text}</span>
+                                                                            {message?.replay?.chatId?.mediaUrl == "share" ? <Link className='text-blue-300' to={"/get_post_by_notification"} state={{ postId: message?.replay.chatId?.share?._id }}>go to comment</Link> : null}
+                                                                            {console.log(chats)}
+                                                                        </div>
+                                                                    </div>
+                                                                    : (<span className={`${ourDesign?.styles?.text?.italic ? "italic" : ""} ${ourDesign?.styles?.text?.color} ${ourDesign?.styles?.text?.family}`}>{message?.messageText}</span>)
                                             }
 
                                             <i className='text-xs text-indigo-500 block'>{message?.time}</i>
@@ -961,20 +972,32 @@ const ChatRoom = () => {
                         </div>
 
 
-                        <div id='gchat' className={`${isCahtTab ? "hidden" : ""} relative ${groupDesign?.background?.bgType == "color" ? `${groupDesign?.background?.bgDesign}` : ""}`} >
-                            <Link to={"/groupsettings"} state={{ friends }} className='w-10 h-10 flex justify-center items-center rounded-full bg-green-500 sticky top-16'><Plus /></Link>
-                            {groupChats.map((data, index) => (
-                                <div key={index} id={data?._id} className={`chat ${data?.sender?._id === sender ? "chat-end" : "chat-start"} flex flex-col`}>
 
-                                    <div className={`max-w-[50%] min-w-[20%] h-auto rounded-xl ${data.sender?._id === sender ? " rounded-br-none" : "rounded-bl-none"} bg-blue-300 p-1 relative`}>
+
+
+
+
+
+
+
+
+
+
+
+                        <div id='gchat' className={`${isCahtTab ? "hidden" : ""} relative ${groupDesign?.background?.bgType == "color" ? `${groupDesign?.background?.bgDesign}` : ""}`} >
+                            <Link to={"/groupsettings"} state={{ friends }} className='w-10 h-10 flex justify-center items-center rounded-full bg-green-500 sticky top-16 z-50'><Plus /></Link>
+                            {groupChats?.map((data, index) => (
+                                <div key={index} id={data?._id} className={`chat ${data?.sender?._id === sender ? "chat-end" : "chat-start"} flex flex-col `}>
+
+                                    <div className={`sm:max-w-[50%] max-w-[90%] min-w-[20%] h-auto rounded-xl ${data.sender?._id === sender ? " rounded-br-none" : "rounded-bl-none"} p-1 relative bg-slate-700/60`}>
                                         {data?.messageType == "reply" ? <span className={`inline-block absolute z-30 ${data.sender?._id === sender ? "-left-5 -top-4 -rotate-45" : "-right-5 -top-4 rotate-45"}`}>reply</span> : null}
-                                        {data?.messageType == "text" ? <h4 className='px-2'>{data?.content}</h4> : data?.messageType == "image" ? <img src={data?.content} className='rounded-3xl' /> : data?.messageType == "video" ? <video src={data?.content} controls className='rounded-3xl' ></video> : data?.messageType == "audio" ? <audio src={data?.content} controls /> : data?.messageType == "link" ? <a href={data.content} target='_blank' className='italic text-indigo-800 px-2'>{data?.content}</a> : data?.messageType == "reply" ?
+                                        {data?.messageType == "text" ? <h4 className='px-2'>{data?.content}</h4> : data?.messageType == "image" ? <img src={data?.content} className='rounded-3xl' /> : data?.messageType == "video" ? <video src={data?.content} controls className='rounded-3xl' ></video> : data?.messageType == "audio" && data?.content.includes(".mp3") || data?.content.includes(".webm") ? <audio className='w-full h-6' src={data?.content} controls /> : data?.messageType == "link" ? <a href={data.content} target='_blank' className='italic text-indigo-800 px-2'>{data?.content}</a> : data?.messageType == "reply" ?
                                             <div>
                                                 <div className={`flex items-center gap-2 p-1 rounded-2xl ${data?.sender?._id === sender ? "justify-end" : "justify-start"}`}>
-                                                    <img src={server_port + "/" + data?.replyTo?.senderImg} className={`rounded-full w-5 h-5`} />
-                                                    {data?.replyTo?.mtext.includes("image") ? <img src={data?.replyTo?.mtext} className='w-5/12 rounded-xl' /> : data?.replyTo?.mtext.includes("video") ? <video src={data?.replyTo?.mtext} controls className='rounded-3xl w-5/12' ></video> : data?.replyTo?.mtext.includes("audio") ? <audio src={data?.replyTo?.mtext} controls id='groupreplyaudio' /> : <h6>{data?.replyTo?.mtext}</h6>}
+                                                    <img src={data?.replyTo?.senderImg} className={`rounded-full w-5 h-5`} />
+                                                    {data?.replyTo?.mtext.includes("image") ? <img src={data?.replyTo?.mtext} className='w-5/12 rounded-xl' /> : data?.replyTo?.mtext.includes(".mp4") ? <video src={data?.replyTo?.mtext} controls className='rounded-3xl w-5/12' ></video> : data?.replyTo?.mtext.includes(".mp3") || data?.replyTo?.mtext.includes(".webm") ? <audio className='w-full h-6' src={data?.replyTo?.mtext} controls id='groupreplyaudio' /> : <h6>{data?.replyTo?.mtext}</h6>}
                                                     <MoveRight />
-                                                    <img src={server_port + "/" + data?.sender?.image} className={`w-5 h-5 rounded-full ${data.sender?._id === sender ? "float-right" : ""}`} />
+                                                    <img src={data?.sender?.image} className={`w-5 h-5 rounded-full ${data.sender?._id === sender ? "float-right" : ""}`} />
                                                     <h4 className=''>{data?.content}</h4>
                                                 </div>
                                             </div> : data?.messageType == "share" ?
@@ -989,20 +1012,20 @@ const ChatRoom = () => {
                                                     <div className='py-2 flex items-center justify-center gap-3'>
                                                         <h4>{data.content} that share by</h4>
                                                         <MoveRight />
-                                                        <img src={server_port + "/" + data?.sender?.image} className={`w-5 h-5 rounded-full`} />
+                                                        <img src={data?.sender?.image} className={`w-5 h-5 rounded-full`} />
                                                         <h5>{data?.sender?.name}</h5>
                                                     </div>
                                                 </div> : ""}
                                         <div className={`flex ${data.sender?._id === sender ? "flex-row-reverse" : ""} items-center justify-start gap-3`}>
-                                            <img src={server_port + "/" + data?.sender?.image} className={`w-5 h-5 rounded-full ${data.sender?._id === sender ? "float-right" : ""}`} />
+                                            <img src={data?.sender?.image} className={`w-5 h-5 rounded-full ${data.sender?._id === sender ? "float-right" : ""}`} />
                                             <h5 className='italic text-xs my-2'>{data?.createdAt}</h5>
                                             <Link to={"/get_post_by_notification"} state={{ postId: data?.share?._id }} className={`text-green-500 mx-5 hover:text-blue-600 underline ${data?.messageType == "share" ? "" : "hidden"}`}>go to comment</Link>
                                         </div>
-                                        <Ellipsis className={`absolute top-[40%] ${data?.sender?._id === sender && data?.messageType == "text" ? "left-[-20%]" : data?.sender?._id === sender && data?.messageType != "text" ? "left-[-10%]" : data?.messageType == "text" ? "right-[-22%]" : "right-[-10%]"}`}
+                                        <Ellipsis className={`absolute top-[40%] ${data?.sender?._id === sender && data?.messageType == "text" ? "left-[-10%]" : data?.sender?._id === sender && data?.messageType != "text" ? "left-[-10%]" : data?.messageType == "text" ? "right-[-22%]" : "right-[-10%]"}`}
                                             onClick={() => { setIsMenu(true); setGChatId(data?._id); setMesageWoner(data?.sender?._id); setMsgText(data?.content); setMsgWonerImage(data?.sender?.image); }} />
                                     </div>
                                     <div className='flex items-center justify-start my-2 '> {data?.seenBy?.map((seeUser, index) => (
-                                        <img key={index} src={server_port + "/" + seeUser?.image} className='w-4 h-4 rounded-full' />
+                                        <img key={index} src={seeUser?.image} className='w-4 h-4 rounded-full' />
                                     ))}</div>
                                 </div>
                             ))}
@@ -1013,6 +1036,21 @@ const ChatRoom = () => {
                                 </div>
                             </div>
                         </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
                         <div className='fixed bottom-14 left-1 sm:left-auto sm:bottom-16 w-44 h-10 flex justify-between items-center text-white'
@@ -1045,7 +1083,7 @@ const ChatRoom = () => {
                     </div>
                 </div>
 
-                <div className={`absolute bottom-0 w-full gap-1 items-center ${isBar ? 'hidden' : 'flex'} ${ourDesign?.block?.isBlock == true ? "hidden" : ""}`}>
+                <div className={`absolute bottom-0 w-full gap-1 items-center ${ourDesign?.block?.isBlock == true ? "hidden" : ""} ${isBar ? "hodden" : "flex"}`}>
                     <div className='w-auto border flex justify-center items-center bg-gradient-to-r from-emerald-400 to-cyan-400 p-2 rounded-md'>
                         <input type="file" className='absolute w-10 opacity-0' onChange={(e) => {
                             setMedia(e.target.files[0])

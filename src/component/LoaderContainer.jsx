@@ -16,7 +16,7 @@ const LoaderContainer = ({ type, loadEnd }) => {
     return (
         <div className={`${loadEnd === true ? "hidden" : ""} `}>
             {
-                type === "load" ? <div className='w-full h-full z-50 absolute top-0 left-0 flex justify-center items-center backdrop-blur-md'>
+                type === "load" ? <div className='w-full h-full z-50 top-0 left-0 flex justify-center items-center fixed bg-black backdrop-blur-md'>
                     <Loader className="animate-speed text-white w-8 h-8" />
                 </div> : type === "upload" ? <div className='w-32 h-7 rounded-md animated-gradient flex items-center justify-evenly'><Loader className='animate-speed'/><span className='w-[70%] capitalize'><span>uploading</span><span className='relative bottom-[3px] left-[3px]'>{loadDot[loadIndex]}</span></span></div> : null
             }
