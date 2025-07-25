@@ -150,7 +150,7 @@ const ChatRoom = () => {
 
             const isMatch = await isMatchGroup(data);
             if (isMatch) {
-                navigate("/groupvideocall", { state: { callId: data, role: "receiver" } });
+                navigate("/groupvideocall", { state: { callId: data, isCaller: false } });
             }
         }
 
@@ -853,7 +853,7 @@ const ChatRoom = () => {
                                 <h1 className='text-center my-2'>{localStorage.getItem("userName")}</h1>
                             </div>
                             <div className='flex gap-5'>
-                                <Link to={isCahtTab ? "/v" : "/groupvideocall"} state={isCahtTab ? { userId: localStorage.getItem("userId"), isDail: true, callId: __callId__ + localStorage.getItem("userId") } : { callId: localStorage.getItem("groupId"), role: "caller" }} >
+                                <Link to={isCahtTab ? "/v" : "/groupvideocall"} state={isCahtTab ? { userId: localStorage.getItem("userId"), isDail: true, callId: __callId__ + localStorage.getItem("userId") } : { callId: localStorage.getItem("groupId"), isCaller: true }} >
                                     <Video />
                                 </Link>
                                 <Link to={"/audiocall"} state={{ callId: __callId__ + localStorage.getItem("userId"), userId: localStorage.getItem("userId"), isDail: true, info: { img: localStorage.getItem("myImage"), name_: localStorage.getItem("myName") }, role: "caller" }}>
