@@ -1,11 +1,9 @@
-// groupVideoCallUtils.js
+// ✅ groupVideoCallUtils.js
 import { database, ref, set, onValue, remove, push, onChildAdded } from "../firebase";
 
 let localStream = null;
-let peerConnections = {};     // peerId => RTCPeerConnection
-let remoteStreams = {}; // peerId => MediaStream
-
-import socket from "../component/socket";
+let peerConnections = {}; // peerId => RTCPeerConnection
+let remoteStreams = {};   // peerId => MediaStream
 
 export const startMedia = async (videoRef) => {
   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -13,26 +11,19 @@ export const startMedia = async (videoRef) => {
   return localStream;
 };
 
-const createPeerConnection = (peerId, remoteVideoRef, callId, isOfferer) => {
+const createPeerConnection = (peerId, onRemoteStream, callId) => {
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   });
 
-  // Add local tracks
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-  // Handle remote stream
   pc.ontrack = (event) => {
-    if (!remoteStreams[peerId]) {
-      const [remoteStream] = event.streams;
-      remoteStreams[peerId] = remoteStream;
-      if (remoteVideoRef) {
-        remoteVideoRef(remoteStream, peerId); // Callback to render new stream
-      }
-    }
+    const [remoteStream] = event.streams;
+    remoteStreams[peerId] = remoteStream;
+    if (onRemoteStream) onRemoteStream(remoteStream, peerId);
   };
 
-  // Send ICE candidates
   pc.onicecandidate = (event) => {
     if (event.candidate) {
       const candidatesRef = ref(database, `calls/${callId}/candidates/${peerId}`);
@@ -46,21 +37,18 @@ const createPeerConnection = (peerId, remoteVideoRef, callId, isOfferer) => {
 
 export const createCall = async (callId, userId) => {
   await set(ref(database, `calls/${callId}/users/${userId}`), { joinedAt: Date.now() });
-  socket.emit("join_room", callId);
 };
 
 export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
-  if (isCaller) {
-    await createCall(callId, userId);
-  }
+  if (isCaller) await createCall(callId, userId);
 
   const usersRef = ref(database, `calls/${callId}/users`);
   onChildAdded(usersRef, async (snapshot) => {
     const peerId = snapshot.key;
     if (peerId === userId || peerConnections[peerId]) return;
 
-    const isOfferer = userId > peerId; // Determine who sends offer to avoid collisions
-    const pc = createPeerConnection(peerId, onRemoteStream, callId, isOfferer);
+    const isOfferer = userId > peerId;
+    const pc = createPeerConnection(peerId, onRemoteStream, callId);
 
     if (isOfferer) {
       const offer = await pc.createOffer();
@@ -72,7 +60,6 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
       });
     }
 
-    // Listen for offer to me
     onValue(ref(database, `calls/${callId}/offers/${peerId}_to_${userId}`), async (snapshot) => {
       const data = snapshot.val();
       if (data && !pc.currentRemoteDescription) {
@@ -87,7 +74,6 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
       }
     });
 
-    // Listen for answer from peer
     onValue(ref(database, `calls/${callId}/answers/${peerId}_to_${userId}`), async (snapshot) => {
       const data = snapshot.val();
       if (data && !pc.currentRemoteDescription) {
@@ -95,7 +81,6 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
       }
     });
 
-    // Listen for ICE candidates from peer
     onChildAdded(ref(database, `calls/${callId}/candidates/${peerId}`), async (snapshot) => {
       const candidate = new RTCIceCandidate(snapshot.val());
       await pc.addIceCandidate(candidate);
