@@ -6,7 +6,7 @@ import {
   toggleMute,
 } from "../utils/groupVideoCallUtils"; // adjust path
 import { Mic, MicOff, PhoneOff, Video } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const GroupVideoCall = () => {
   const { callId, isCaller } = useLocation()?.state || {};
@@ -15,6 +15,7 @@ const GroupVideoCall = () => {
   const [remoteVideos, setRemoteVideos] = useState([]); // { id, stream }
   const [muted, setMuted] = useState(false);
   const [inCall, setInCall] = useState(false);
+  const navigate = useNavigate();
 
   const handleRemoteStream = (stream, peerId) => {
     setRemoteVideos((prev) => {
@@ -33,6 +34,7 @@ const GroupVideoCall = () => {
     await hangUp(callId, userId);
     setRemoteVideos([]);
     setInCall(false);
+    navigate("/chatroom");
   };
 
   const handleMuteToggle = () => {
@@ -53,19 +55,29 @@ const GroupVideoCall = () => {
         </div>
 
         {/* Remote Videos */}
-        {remoteVideos.map((vid) => (
-          <div key={vid.id} className="relative rounded overflow-hidden bg-black">
-            <video
-              autoPlay
-              playsInline
-              className="w-full h-64 object-cover"
-              ref={(el) => el && (el.srcObject = vid.stream)}
-            />
-            <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">
-              {vid.id}
-            </span>
-          </div>
-        ))}
+        {remoteVideos.map((vid) => {
+          const videoRef = useRef(null);
+
+          useEffect(() => {
+            if (videoRef.current && !videoRef.current.srcObject) {
+              videoRef.current.srcObject = vid.stream;
+            }
+          }, [vid.stream]);
+
+          return (
+            <div key={vid.id} className="relative rounded overflow-hidden bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full h-64 object-cover"
+              />
+              <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">
+                {vid.id}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Controls */}
