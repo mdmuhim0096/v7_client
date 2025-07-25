@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { myfriends_api, server_port } from './api';
-import { ArrowLeft, Rocket, Reply, Ellipsis, Trash, RemoveFormatting, X, Settings, ArrowUp, FolderUp, ArrowDown, ShieldBan, Video, Phone, UserMinus, UserPlus, Plus, MoveRight, LogOut } from "lucide-react";
+import { ArrowLeft, Rocket, Reply, Ellipsis, Trash, RemoveFormatting, X, Settings, ArrowUp, FolderUp, ArrowDown, ShieldBan, Video, Phone, UserMinus, UserPlus, Plus, MoveRight, LogOut, SyringeIcon, SmilePlus } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import socket from './socket';
@@ -39,6 +39,7 @@ const ChatRoom = () => {
     const [isCahtTab, setIsChatTap] = useState(false);
     const [endLoad, setLoadEnd] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [isShowEmoji, setIsShowEmoji] = useState(false);
 
     const inputRef = useRef();
     const focus = () => { inputRef.current.focus() };
@@ -211,7 +212,7 @@ const ChatRoom = () => {
 
     function goToBottom() {
         const chat_container = document.getElementById("chat_container");
-        chat_container.scrollTo({ top: chat_container.scrollHeight, behavior: "smooth" })
+        chat_container?.scrollTo({ top: chat_container.scrollHeight, behavior: "smooth" })
     }
 
     const getTime = () => {
@@ -308,12 +309,14 @@ const ChatRoom = () => {
 
     function deleteMessage(chatId) {
         axios.post(server_port + "/api/chat/delete", { chatId });
-        socket.emit("__load_data__")
+        socket.emit("aftersent", null);
+        get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
     }
 
     function unsentMessage(chatId) {
         axios.post(server_port + "/api/chat/unsent", { chatId });
-        socket.emit("__load_data__");
+        socket.emit("aftersent", null);
+        get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
     }
 
     function replayMessage(chatId) {
@@ -321,9 +324,11 @@ const ChatRoom = () => {
         const time = dateTime.date + " " + dateTime.actual_time;
         axios.post(server_port + "/api/chat/replaychat",
             { recevireId: localStorage.getItem("userId"), senderId: localStorage.getItem("myId"), time, user: localStorage.getItem("myId"), chatId, replay: message })
-        socket.emit("__load_data__");
+            .then(res => {
+                socket.emit("aftersent", null);
+            })
+        setMessage("");
         setIsRplay(false);
-        setLoad(load + 1);
     }
 
     const sender = localStorage.getItem("myId");
@@ -573,6 +578,7 @@ const ChatRoom = () => {
                     el.click();
                     setMessage("");
                     setRplay("");
+                    get_chats(localStorage.getItem("userId"), localStorage.getItem("myId"));
                 }
             }
         };
@@ -638,7 +644,7 @@ const ChatRoom = () => {
             />
 
             <span className={`sm:hidden sticky top-0 ${!isBar ? "hidden" : ""}`}><Navbar /></span>
-            <div className={`flex flex-col sm:w-3/12 lg:block overflow-y-auto h-[91.4%] sm:h-screen  ${isBar ? "" : "hidden"}`}>
+            <div className={`flex flex-col sm:w-5/12 lg:w-3/12 lg:block overflow-y-auto h-[91.4%] sm:h-screen  ${isBar ? "" : "hidden"}`}>
                 <div className={`w-full h-auto text-white`} >{friends?.map((data, index) => (
                     <div onClick={() => {
                         localStorage.setItem("userId", data?._id);
@@ -692,12 +698,14 @@ const ChatRoom = () => {
                 </div>
             </div>
 
-            <div className={`w-full h-full bg-purple-800 justify-center hidden items-center ${isBar ? "sm:flex" : "hidden"}`}>
+            <div className={`w-full h-full bg-zinc-950 justify-center hidden items-center ${isBar ? "sm:flex" : "hidden"}`}>
                 <h1>select one</h1>
             </div>
 
             <div className={`w-full h-full relative overflow-x-hidden text-white ${!isBar ? "" : "hidden"}`}>
-
+                <div className={`absolute z-20 bottom-[10%] ${isShowEmoji ? "" : "hidden"} w-full sm:w-7/12`}>
+                    <Emoji onSelect={(e) => { handelEmogi(e) }} />
+                </div>
                 <div id='ourSettings' className={`w-full sm:w-10/12 h-[90vh] border fixed backdrop-blur-sm z-50 duration-500 ${showSetting && isCahtTab ? "ml-0" : "ml-[100%]"} overflow-y-auto`}>
                     <div className='sticky top-0 left-0 w-full h-auto backdrop-blur-3xl' onClick={() => { setShowSetting(false) }}>
                         <X />
@@ -841,7 +849,7 @@ const ChatRoom = () => {
                         <div className='w-full flex items-center p-2 bg-indigo-950 rounded-lg justify-between sticky top-0 z-20'>
                             <ArrowLeft className='lg:hidden' onClick={() => { setIsBar(true) }} />
                             <div className='flex items-center justify-start gap-4'>
-                                <img className='rounded-full w-10 h-10' src={localStorage.getItem("userImage").includes("group.png") ? server_port + "/" + localStorage.getItem("userImage") : localStorage.getItem("userImage")} alt="" />
+                                <img className='rounded-full w-10 h-10' src={localStorage.getItem("userImage")?.includes("group.png") ? server_port + "/" + localStorage.getItem("userImage") : localStorage.getItem("userImage")} alt="" />
                                 <h1 className='text-center my-2'>{localStorage.getItem("userName")}</h1>
                             </div>
                             <div className='flex gap-5'>
@@ -898,7 +906,7 @@ const ChatRoom = () => {
                                                                             </div> :
                                                                             <div>
                                                                                 {message?.replay?.chatId?.mediaUrl?.includes("image") ?
-                                                                                    <img src={server_port + "/" + message?.replay?.chatId?.mediaUrl} alt="" /> : message?.replay?.chatId?.mediaUrl?.includes("video") ? <video src={server_port + "/" + message?.replay.chatId?.mediaUrl} controls></video> : message?.replay?.chatId?.mediaUrl?.includes("audio") ? <audio src={message?.replay.chatId?.mediaUrl} controls /> : message?.replay.chatId.messageTextull}
+                                                                                    <img src={server_port + "/" + message?.replay?.chatId?.mediaUrl} alt="" /> : message?.replay?.chatId?.mediaUrl?.includes("video") ? <video src={server_port + "/" + message?.replay?.chatId?.mediaUrl} controls></video> : message?.replay?.chatId?.mediaUrl?.includes("audio") ? <audio src={message?.replay.chatId?.mediaUrl} controls /> : message?.replay?.chatId?.messageTextull}
 
                                                                             </div>
                                                                         }
@@ -972,20 +980,8 @@ const ChatRoom = () => {
                         </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
                         <div id='gchat' className={`${isCahtTab ? "hidden" : ""} relative ${groupDesign?.background?.bgType == "color" ? `${groupDesign?.background?.bgDesign}` : ""}`} >
-                            <Link to={"/groupsettings"} state={{ friends }} className='w-10 h-10 flex justify-center items-center rounded-full bg-green-500 sticky top-16 z-50'><Plus /></Link>
+                            <Link to={"/groupsettings"} state={{ friends }} className='w-10 h-10 flex justify-center items-center rounded-full bg-green-500 sticky top-16 z-30'><Plus /></Link>
                             {groupChats?.map((data, index) => (
                                 <div key={index} id={data?._id} className={`chat ${data?.sender?._id === sender ? "chat-end" : "chat-start"} flex flex-col `}>
 
@@ -1038,21 +1034,6 @@ const ChatRoom = () => {
                         </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                         <div className='fixed bottom-14 left-1 sm:left-auto sm:bottom-16 w-44 h-10 flex justify-between items-center text-white'
                         >
                             <div className={`cursor-pointer w-10 h-10 bg-blue-500 rounded-md ${chats?.length <= 4 ? "hidden" : "flex"} justify-center items-center text-white`} onClick={() => {
@@ -1083,7 +1064,7 @@ const ChatRoom = () => {
                     </div>
                 </div>
 
-                <div className={`absolute bottom-0 w-full gap-1 items-center ${ourDesign?.block?.isBlock == true ? "hidden" : ""} ${isBar ? "hodden" : "flex"}`}>
+                <div className={`absolute bottom-0 w-full gap-1 items-center ${ourDesign?.block?.isBlock == true ? "hidden" : ""} ${isBar ? "hidden" : "flex"}`}>
                     <div className='w-auto border flex justify-center items-center bg-gradient-to-r from-emerald-400 to-cyan-400 p-2 rounded-md'>
                         <input type="file" className='absolute w-10 opacity-0' onChange={(e) => {
                             setMedia(e.target.files[0])
@@ -1099,13 +1080,13 @@ const ChatRoom = () => {
                     <div onMouseDown={() => { setRecording(true) }} onTouchStart={() => { setRecording(true) }} onTouchEnd={() => { setRecording(false) }}>
                         <VoiceButton onAudioReady={(e) => { vioceHandeler(e) }} />
                     </div>
-                    <div>
-                        <Emoji onSelect={(e) => { handelEmogi(e) }} />
+                    <div onClick={() => { setIsShowEmoji(isShowEmoji ? false : true) }}>
+                        <SmilePlus />
                     </div>
                     <input type="text"
                         value={message}
                         ref={inputRef}
-                        onChange={(e) => setMessage(e.target.value)}
+                        onChange={(e) => { setMessage(e.target.value); setIsShowEmoji(false) }}
                         placeholder={inputText} className='w-11/12 rounded-e-none' />
                     <div className='border-none pr-3 rounded-s-none h-auto w-20 bg-gradient-to-r from-fuchsia-500 to-cyan-500 flex justify-center items-center p-2 
                     rounded-e-lg text-white cursor-pointer' id='rocketsender' onClick={() => {
@@ -1125,7 +1106,7 @@ const ChatRoom = () => {
                     </div>
                 </div>
             </div>
-            <div className={`absolute bottom-2 cursor-pointer left-1 w-10 h-10 bg-blue-500 rounded-md sm:flex hidden justify-center items-center text-white  `}
+            <div className={`absolute bottom-2 cursor-pointer left-1 w-10 h-10 bg-blue-500 rounded-md sm:${isBar ? "flex" : "hidden"} hidden justify-center items-center text-white `}
                 onClick={() => { navigate("/") }}>
                 <ArrowLeft />
             </div>

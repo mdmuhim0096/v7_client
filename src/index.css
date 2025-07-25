@@ -47,7 +47,7 @@
   box-sizing: border-box !important;
 }
 
-.animate-speed{
+.animate-speed {
   animation: while linear 0.4s infinite;
 }
 
@@ -62,9 +62,11 @@
     background-position: 0% 50%;
     filter: hue-rotate(0deg)
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
     filter: hue-rotate(360deg)
@@ -72,12 +74,13 @@
 }
 
 
-@keyframes while{
-  0%{
+@keyframes while {
+  0% {
     transform: rotate(0deg);
   }
-  100%{
-      transform: rotate(360deg);
+
+  100% {
+    transform: rotate(360deg);
   }
 }
 
@@ -530,16 +533,52 @@ body {
   }
 }
 
-
+/* 
 #Picker {
-  width: 500px !important;
-  height: auto !important;
-  position: absolute;
-  margin-bottom: 9%;
-  z-index: 200;
-  bottom: 0;
-  left: 0;
+    width: 50% !important;
+    height: auto !important;
+    position: absolute;
+    margin-bottom: 9%;
+    z-index: 200;
+    bottom: 0;
+    left: 0;
+  }
+
+@media (max-width: 800px) {
+  #Picker {
+    width: 100% !important;
+  }
 }
+
+@media (min-width: 768px) {
+  #Picker {
+    bottom: -27% !important
+  }
+}
+
+@media (min-width: 425px) {
+  #Picker {
+    bottom: 20%  
+  }
+}
+
+@media (min-width: 360px) {
+  #Picker {
+    bottom: 35%  
+  }
+}
+
+@media (min-width: 341px) {
+  #Picker {
+    bottom: 40% 
+  }
+}
+
+@media (min-width: 320px) {
+  #Picker {
+    bottom: 45% 
+  }
+} */
 
 #Picker .epr-body {
   width: 100% !important;

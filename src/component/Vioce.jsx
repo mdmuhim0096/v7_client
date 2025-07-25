@@ -1,8 +1,8 @@
-// components/VoiceButton.jsx
+
 import React, { useRef, useState } from "react";
 import { Mic } from "lucide-react";
 
-// IndexedDB Helpers
+// Open IndexedDB
 const openDB = () => {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open("VoiceAudioDB", 1);
@@ -17,29 +17,29 @@ const openDB = () => {
     });
 };
 
+// Save audio blob to IndexedDB
 const saveAudioBlob = async (id, blob) => {
     const db = await openDB();
     const tx = db.transaction("audios", "readwrite");
     const store = tx.objectStore("audios");
-    await store.put({ id, blob });
-    await tx.complete;
-    db.close();
+    store.put({ id, blob });
+    return tx.done;
 };
 
+// Retrieve audio blob from IndexedDB
 const getAudioBlob = async (id) => {
     const db = await openDB();
     const tx = db.transaction("audios", "readonly");
     const store = tx.objectStore("audios");
-    const result = await new Promise((res, rej) => {
+
+    return new Promise((resolve, reject) => {
         const req = store.get(id);
-        req.onsuccess = () => res(req.result);
-        req.onerror = () => rej(req.error);
+        req.onsuccess = () => resolve(req.result?.blob || null);
+        req.onerror = () => reject(req.error);
     });
-    db.close();
-    return result?.blob || null;
 };
 
-
+// Main Component
 export default function VoiceButton({ onAudioReady }) {
     const mediaRecorderRef = useRef(null);
     const streamRef = useRef(null);
@@ -54,13 +54,27 @@ export default function VoiceButton({ onAudioReady }) {
             audioChunks.current = [];
             audioIdRef.current = `audio_${Date.now()}`;
 
-            mediaRecorderRef.current = new MediaRecorder(stream);
+            // Select supported MIME type
+            const mimeType =
+                MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" :
+                MediaRecorder.isTypeSupported("audio/ogg;codecs=opus") ? "audio/ogg;codecs=opus" :
+                "";
+
+            if (!mimeType) {
+                alert("No supported audio format found.");
+                return;
+            }
+
+            mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+
             mediaRecorderRef.current.ondataavailable = (e) => {
-                audioChunks.current.push(e.data);
+                if (e.data.size > 0) {
+                    audioChunks.current.push(e.data);
+                }
             };
 
             mediaRecorderRef.current.onstop = async () => {
-                const blob = new Blob(audioChunks.current, { type: "audio/webm" });
+                const blob = new Blob(audioChunks.current, { type: mimeType });
                 await saveAudioBlob(audioIdRef.current, blob);
                 const storedBlob = await getAudioBlob(audioIdRef.current);
 
@@ -68,14 +82,15 @@ export default function VoiceButton({ onAudioReady }) {
                     onAudioReady(storedBlob);
                 }
 
-                streamRef.current.getTracks().forEach((track) => track.stop());
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
             };
 
             mediaRecorderRef.current.start();
             setIsRecording(true);
         } catch (err) {
             console.error("Microphone access failed:", err);
-            alert("Microphone permission required.");
+            alert("Microphone permission is required.");
         }
     };
 
@@ -87,10 +102,15 @@ export default function VoiceButton({ onAudioReady }) {
     };
 
     return (
-        <div onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp} onTouchStart={handleMouseDown} onTouchEnd={handleMouseUp} className='w-12 h-10 rounded-lg bg-rose-500 flex justify-center items-center' id='mic' >
-            <Mic />
+        <div
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleMouseDown}
+            onTouchEnd={handleMouseUp}
+            className="w-12 h-10 rounded-lg bg-rose-500 flex justify-center items-center cursor-pointer"
+            id="mic"
+        >
+            <Mic className={isRecording ? "text-white animate-pulse" : "text-white"} />
         </div>
     );
 }
-
