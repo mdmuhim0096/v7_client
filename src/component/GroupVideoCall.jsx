@@ -4,9 +4,10 @@ import {
   joinCall,
   hangUp,
   toggleMute,
-} from "../utils/groupVideoCallUtils"; // adjust path
+} from "../utils/groupVideoCallUtils";
 import { Mic, MicOff, PhoneOff, Video } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import RemoteVideoTile from "./RemoteVideoTile"; // Add this line
 
 const GroupVideoCall = () => {
   const { callId, isCaller } = useLocation()?.state || {};
@@ -50,34 +51,20 @@ const GroupVideoCall = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-6xl">
         {/* Local Video */}
         <div className="relative rounded overflow-hidden bg-black">
-          <video ref={localVideoRef} autoPlay muted playsInline className="w-full h-64 object-cover" />
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-64 object-cover"
+          />
           <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">You</span>
         </div>
 
         {/* Remote Videos */}
-        {remoteVideos.map((vid) => {
-          const videoRef = useRef(null);
-
-          useEffect(() => {
-            if (videoRef.current && !videoRef.current.srcObject) {
-              videoRef.current.srcObject = vid.stream;
-            }
-          }, [vid.stream]);
-
-          return (
-            <div key={vid.id} className="relative rounded overflow-hidden bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-64 object-cover"
-              />
-              <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">
-                {vid.id}
-              </span>
-            </div>
-          );
-        })}
+        {remoteVideos.map((vid) => (
+          <RemoteVideoTile key={vid.id} stream={vid.stream} peerId={vid.id} />
+        ))}
       </div>
 
       {/* Controls */}
