@@ -1,71 +1,75 @@
 import React, { useRef, useState } from "react";
-import {
-  startMedia,
-  joinCall,
-  hangUp,
-  toggleMute,
-} from "../utils/groupVideoCallUtils";
-import RemoteVideoTile from "./RemoteVideoTile";
-import { Mic, MicOff, PhoneOff, Video } from "lucide-react";
+import { startMedia, joinCall, hangUp } from "../utils/groupVideoCallUtils";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const GroupVideoCall = () => {
-  const { callId, isCaller } = useLocation()?.state || {};
-  const userId = localStorage.getItem("myId");
-  const localVideoRef = useRef(null);
-  const [remoteVideos, setRemoteVideos] = useState([]);
-  const [inCall, setInCall] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const { callId } = useLocation()?.state || {};
   const navigate = useNavigate();
+  const localVideoRef = useRef(null);
+  const [remoteStreams, setRemoteStreams] = useState([]);
+  const [inCall, setInCall] = useState(false);
 
-  const handleRemoteStream = (stream, peerId) => {
-    setRemoteVideos((prev) => {
-      const exists = prev.find((vid) => vid.id === peerId);
-      if (exists) return prev;
-      return [...prev, { id: peerId, stream }];
+  const handleRemoteStream = (stream) => {
+    setRemoteStreams((prev) => {
+      if (prev.find((s) => s.id === stream.id)) return prev;
+      return [...prev, stream];
     });
   };
 
   const handleStart = async () => {
     await startMedia(localVideoRef.current);
-    await joinCall(callId, userId, handleRemoteStream, isCaller);
+    await joinCall(callId, handleRemoteStream);
     setInCall(true);
   };
 
   const handleLeave = async () => {
-    await hangUp(callId, userId);
-    setRemoteVideos([]);
+    await hangUp(callId);
+    setRemoteStreams([]);
     setInCall(false);
     navigate("/chatroom");
+    window.location.reload();
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col items-center">
-      <h1 className="text-2xl font-bold mb-4">Group Video Call</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-6xl">
-        <div className="relative bg-black min-h-[16rem] rounded">
-          <video ref={localVideoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-          <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">You</span>
+    <div className="min-h-screen bg-gray-900 text-white p-4">
+      <h2 className="text-2xl mb-4">Group Video Call</h2>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="bg-black rounded overflow-hidden">
+          <video ref={localVideoRef} autoPlay muted playsInline className="w-full h-48 object-cover" />
+          <div className="text-xs p-1 bg-gray-800 text-white text-center">You</div>
         </div>
-        {remoteVideos.map((vid) => (
-          <RemoteVideoTile key={`${vid.id}-${vid.stream.id}`} stream={vid.stream} peerId={vid.id} />
+
+        {remoteStreams.map((stream) => (
+          <div key={stream.id} className="bg-black rounded overflow-hidden">
+            <video
+              autoPlay
+              playsInline
+              className="w-full h-48 object-cover"
+              ref={(video) => {
+                if (video) video.srcObject = stream;
+              }}
+            />
+            <div className="text-xs p-1 bg-gray-800 text-white text-center">Peer</div>
+          </div>
         ))}
       </div>
-      <div className="flex gap-4 mt-6">
+
+      <div className="mt-6 flex gap-4">
         {!inCall ? (
-          <button onClick={handleStart} className="bg-green-600 px-4 py-2 rounded">
-            <Video className="inline mr-2" /> Start Call
+          <button
+            onClick={handleStart}
+            className="bg-green-600 px-4 py-2 rounded"
+          >
+            Start Call
           </button>
         ) : (
-          <>
-            <button onClick={() => setMuted(toggleMute())} className="bg-yellow-500 px-4 py-2 rounded">
-              {muted ? <MicOff className="inline mr-2" /> : <Mic className="inline mr-2" />}
-              {muted ? "Unmute" : "Mute"}
-            </button>
-            <button onClick={handleLeave} className="bg-red-600 px-4 py-2 rounded">
-              <PhoneOff className="inline mr-2" /> Hang Up
-            </button>
-          </>
+          <button
+            onClick={handleLeave}
+            className="bg-red-600 px-4 py-2 rounded"
+          >
+            Leave Call
+          </button>
         )}
       </div>
     </div>
