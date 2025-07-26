@@ -7,16 +7,30 @@ let peerConnections = {}; // peerId => RTCPeerConnection
 let remoteStreams = {};   // peerId => MediaStream
 
 export const startMedia = async (videoRef) => {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: "user",
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+    },
+    audio: true,
+  });
+
   if (videoRef) videoRef.srcObject = localStream;
   return localStream;
 };
+
 
 const createPeerConnection = (peerId, onRemoteStream, callId) => {
 
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   });
+
+  if (!localStream) {
+    console.warn("⚠️ No local stream available before creating peer connection!");
+    return;
+  }
 
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 

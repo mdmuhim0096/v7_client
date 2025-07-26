@@ -7,6 +7,11 @@ const RemoteVideoTile = ({ stream, peerId }) => {
   useLayoutEffect(() => {
     if (videoRef.current && stream) {
       console.log("📺 [RemoteVideoTile] Attaching stream to video for peer:", peerId, stream);
+      console.log(`[${peerId}] Stream tracks:`, stream.getTracks());
+      console.log(`[${peerId}] Video tracks:`, stream.getVideoTracks());
+
+      // Reset before assigning new stream
+      videoRef.current.srcObject = null;
       videoRef.current.srcObject = stream;
 
       const tryPlay = async () => {
@@ -22,15 +27,15 @@ const RemoteVideoTile = ({ stream, peerId }) => {
     }
   }, [stream]);
 
-
   return (
     <div className="relative rounded overflow-hidden bg-black">
       <video
+        key={stream?.id} // 🔑 Force React to remount the video element
         ref={videoRef}
         autoPlay
         playsInline
-        muted
         className="w-full h-64"
+        controls={false}
       />
       <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">
         {peerId}
