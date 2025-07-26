@@ -44,7 +44,7 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
   if (isCaller) await createCall(callId, userId);
 
   console.log(callId, userId, onRemoteStream, isCaller);
-  socket.emit("join_room", null);
+  socket.emit("join_room", callId);
   const usersRef = ref(database, `calls/${callId}/users`);
   onChildAdded(usersRef, async (snapshot) => {
     const peerId = snapshot.key;
