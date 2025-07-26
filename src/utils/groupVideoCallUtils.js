@@ -1,51 +1,34 @@
 // ✅ groupVideoCallUtils.js
-import { database, ref, set, onValue, remove, push, onChildAdded } from "../firebase";
+import { database, ref, set, remove, onValue, push, onChildAdded } from "../firebase";
 import socket from "../component/socket";
 
 let localStream = null;
-let peerConnections = {}; // peerId => RTCPeerConnection
-let remoteStreams = {};   // peerId => MediaStream
+let peerConnections = {};
+let remoteStreams = {};
 
 export const startMedia = async (videoRef) => {
   localStream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: "user",
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
-    },
+    video: { facingMode: "user" },
     audio: true,
   });
-
   if (videoRef) videoRef.srcObject = localStream;
   return localStream;
 };
 
-
 const createPeerConnection = (peerId, onRemoteStream, callId) => {
-
   const pc = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
   });
 
-  if (!localStream) {
-    console.warn("⚠️ No local stream available before creating peer connection!");
-    return;
-  }
-
-  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
   pc.ontrack = (event) => {
     const [remoteStream] = event.streams;
-    console.log("🔊 Received remote stream from", peerId, remoteStream);
-    console.log("📽️ Tracks:", remoteStream.getTracks());
-    console.log("🎥 Video tracks:", remoteStream.getVideoTracks());
-
-    if (remoteStream) {
+    if (remoteStream && !remoteStreams[peerId]) {
       remoteStreams[peerId] = remoteStream;
-      if (onRemoteStream) onRemoteStream(remoteStream, peerId);
+      onRemoteStream(remoteStream, peerId);
     }
   };
-
 
   pc.onicecandidate = (event) => {
     if (event.candidate) {
@@ -64,8 +47,7 @@ export const createCall = async (callId, userId) => {
 
 export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
   if (isCaller) await createCall(callId, userId);
-
-  console.log(callId, userId, onRemoteStream, isCaller);
+  console.log("yes")
   socket.emit("join_room", callId);
   const usersRef = ref(database, `calls/${callId}/users`);
   onChildAdded(usersRef, async (snapshot) => {
@@ -78,11 +60,7 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
     if (isOfferer) {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-
-      await set(ref(database, `calls/${callId}/offers/${userId}_to_${peerId}`), {
-        type: offer.type,
-        sdp: offer.sdp
-      });
+      await set(ref(database, `calls/${callId}/offers/${userId}_to_${peerId}`), offer);
     }
 
     onValue(ref(database, `calls/${callId}/offers/${peerId}_to_${userId}`), async (snapshot) => {
@@ -91,12 +69,10 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
         await pc.setRemoteDescription(new RTCSessionDescription(data));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        await set(ref(database, `calls/${callId}/answers/${userId}_to_${peerId}`), {
-          type: answer.type,
-          sdp: answer.sdp
-        });
+        await set(ref(database, `calls/${callId}/answers/${userId}_to_${peerId}`), answer);
       }
-    }, { onlyOnce: true }); // ✅ add onlyOnce to prevent duplicate triggers
+    }, { onlyOnce: true });
+
 
 
     onValue(ref(database, `calls/${callId}/answers/${peerId}_to_${userId}`), async (snapshot) => {
@@ -106,7 +82,6 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
       }
     }, { onlyOnce: true });
 
-
     onChildAdded(ref(database, `calls/${callId}/candidates/${peerId}`), async (snapshot) => {
       const candidate = new RTCIceCandidate(snapshot.val());
       await pc.addIceCandidate(candidate);
@@ -115,24 +90,16 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
 };
 
 export const hangUp = async (callId, userId) => {
-  // Close all peer connections
   Object.values(peerConnections).forEach((pc) => pc.close());
   peerConnections = {};
   remoteStreams = {};
-
-  // Remove the current user
   await remove(ref(database, `calls/${callId}/users/${userId}`));
 
-  // Check if any users remain
   const usersRef = ref(database, `calls/${callId}/users`);
   onValue(usersRef, async (snapshot) => {
     const users = snapshot.val();
     if (!users || Object.keys(users).length === 0) {
-      // ✅ No one left, safe to clean the entire call tree
       await remove(ref(database, `calls/${callId}`));
-      console.log("🧼 All users left, cleaned up call:", callId);
-    } else {
-      console.log("👥 Other users still in call, not deleting:", callId);
     }
   }, { onlyOnce: true });
 };
