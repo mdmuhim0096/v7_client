@@ -13,6 +13,7 @@ export const startMedia = async (videoRef) => {
 };
 
 const createPeerConnection = (peerId, onRemoteStream, callId) => {
+
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   });
@@ -21,8 +22,11 @@ const createPeerConnection = (peerId, onRemoteStream, callId) => {
 
   pc.ontrack = (event) => {
     const [remoteStream] = event.streams;
-    remoteStreams[peerId] = remoteStream;
-    if (onRemoteStream) onRemoteStream(remoteStream, peerId);
+    console.log("🔊 Received remote stream from", peerId, remoteStream);
+    if (remoteStream) {
+      remoteStreams[peerId] = remoteStream;
+      if (onRemoteStream) onRemoteStream(remoteStream, peerId);
+    }
   };
 
   pc.onicecandidate = (event) => {
@@ -69,20 +73,21 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
         await pc.setRemoteDescription(new RTCSessionDescription(data));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-
         await set(ref(database, `calls/${callId}/answers/${userId}_to_${peerId}`), {
           type: answer.type,
           sdp: answer.sdp
         });
       }
-    });
+    }, { onlyOnce: true }); // ✅ add onlyOnce to prevent duplicate triggers
+
 
     onValue(ref(database, `calls/${callId}/answers/${peerId}_to_${userId}`), async (snapshot) => {
       const data = snapshot.val();
       if (data && !pc.currentRemoteDescription) {
         await pc.setRemoteDescription(new RTCSessionDescription(data));
       }
-    });
+    }, { onlyOnce: true });
+
 
     onChildAdded(ref(database, `calls/${callId}/candidates/${peerId}`), async (snapshot) => {
       const candidate = new RTCIceCandidate(snapshot.val());

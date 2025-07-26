@@ -6,6 +6,7 @@ const RemoteVideoTile = ({ stream, peerId }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {
+    console.log("📺 Setting stream for peer:", peerId, stream);
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
