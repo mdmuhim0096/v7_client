@@ -44,6 +44,7 @@ export const joinCall = async (callId, onRemoteStream) => {
 
   const usersRef = ref(database, `calls/${callId}/users`);
   onChildAdded(usersRef, async (snapshot) => {
+    console.log("📨 Offer snapshot received:", snapshot.val());
     const peerId = snapshot.key;
     if (peerId === myId || peerConnections[peerId]) return;
 
@@ -58,13 +59,15 @@ export const joinCall = async (callId, onRemoteStream) => {
 
     onValue(ref(database, `calls/${callId}/offers/${peerId}_to_${myId}`), async (snapshot) => {
       const data = snapshot.val();
-      if (data && !pc.currentRemoteDescription) {
+      if (data && data.type === "offer" && data.sdp && !pc.currentRemoteDescription) {
         await pc.setRemoteDescription(new RTCSessionDescription(data));
+
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         await set(ref(database, `calls/${callId}/answers/${myId}_to_${peerId}`), answer);
       }
     }, { onlyOnce: true });
+
 
     onValue(ref(database, `calls/${callId}/answers/${peerId}_to_${myId}`), async (snapshot) => {
       const data = snapshot.val();
