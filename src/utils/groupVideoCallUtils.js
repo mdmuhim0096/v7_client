@@ -1,5 +1,6 @@
 // ✅ groupVideoCallUtils.js
 import { database, ref, set, onValue, remove, push, onChildAdded } from "../firebase";
+import socket from "../component/socket";
 
 let localStream = null;
 let peerConnections = {}; // peerId => RTCPeerConnection
@@ -42,6 +43,8 @@ export const createCall = async (callId, userId) => {
 export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
   if (isCaller) await createCall(callId, userId);
 
+  console.log(callId, userId, onRemoteStream, isCaller);
+  socket.emit("join_room", null);
   const usersRef = ref(database, `calls/${callId}/users`);
   onChildAdded(usersRef, async (snapshot) => {
     const peerId = snapshot.key;
