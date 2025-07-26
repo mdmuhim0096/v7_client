@@ -13,6 +13,7 @@ import RemoteVideoTile from "./RemoteVideoTile";
 
 const GroupVideoCall = () => {
   const { callId, isCaller } = useLocation()?.state || {};
+  console.log(callId, isCaller);
   const userId = localStorage.getItem("myId");
   const localVideoRef = useRef(null);
   const [remoteVideos, setRemoteVideos] = useState([]);
@@ -21,11 +22,17 @@ const GroupVideoCall = () => {
   const navigate = useNavigate();
 
   const handleRemoteStream = (stream, peerId) => {
+    console.log("📦 Adding remote stream to UI:", peerId, stream);
     setRemoteVideos((prev) => {
-      if (prev.find((vid) => vid.id === peerId)) return prev;
+      const exists = prev.find((vid) => vid.id === peerId);
+      if (exists) {
+        console.log("⚠️ Already exists, skipping UI update for", peerId);
+        return prev;
+      }
       return [...prev, { id: peerId, stream }];
     });
   };
+
 
   const handleStartCall = async () => {
     await startMedia(localVideoRef.current);
@@ -54,8 +61,19 @@ const GroupVideoCall = () => {
           <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">You</span>
         </div>
         {remoteVideos.map((vid) => (
-          <RemoteVideoTile key={vid.id} stream={vid.stream} peerId={vid.id} />
+          <div key={vid.id}>
+            <video
+              autoPlay
+              playsInline
+              ref={(el) => {
+                if (el) el.srcObject = vid.stream;
+              }}
+              className="w-64 h-48 bg-black"
+            />
+            <p className="text-xs">{vid.id}</p>
+          </div>
         ))}
+
       </div>
       <div className="flex gap-4 mt-6">
         {!inCall ? (
