@@ -1,16 +1,27 @@
-import React, { useEffect, useRef } from "react";
+// ✅ RemoteVideoTile.jsx
+import React, { useLayoutEffect, useRef } from "react";
 
 const RemoteVideoTile = ({ stream, peerId }) => {
   const videoRef = useRef(null);
 
-  useEffect(() => {
-    console.log("📺 [RemoteVideoTile] Attaching stream to video for peer:", peerId, stream);
+  useLayoutEffect(() => {
     if (videoRef.current && stream) {
+      console.log("📺 [RemoteVideoTile] Attaching stream to video for peer:", peerId, stream);
       videoRef.current.srcObject = stream;
-    } else {
-      console.warn("⚠️ Missing videoRef or stream!", videoRef.current, stream);
+
+      const tryPlay = async () => {
+        try {
+          await videoRef.current.play();
+          console.log("▶️ Remote video playing for", peerId);
+        } catch (err) {
+          console.warn("🚫 Remote video failed to play", peerId, err);
+        }
+      };
+
+      tryPlay();
     }
   }, [stream]);
+
 
   return (
     <div className="relative rounded overflow-hidden bg-black">
@@ -18,7 +29,8 @@ const RemoteVideoTile = ({ stream, peerId }) => {
         ref={videoRef}
         autoPlay
         playsInline
-        className="w-full h-64 object-cover"
+        muted
+        className="w-full h-64"
       />
       <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">
         {peerId}
