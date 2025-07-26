@@ -1,41 +1,43 @@
-// ✅ RemoteVideoTile.jsx
-import React, { useLayoutEffect, useRef } from "react";
+// RemoteVideoTile.jsx
+import React, { useEffect, useRef } from "react";
 
 const RemoteVideoTile = ({ stream, peerId }) => {
   const videoRef = useRef(null);
+  console.log("✅ RemoteVideoTile mounted:", {
+  peerId,
+  stream,
+  tracks: stream?.getTracks(),
+  videoTracks: stream?.getVideoTracks()
+});
 
-  useLayoutEffect(() => {
-    if (videoRef.current && stream) {
-      console.log("📺 [RemoteVideoTile] Attaching stream to video for peer:", peerId, stream);
-      console.log(`[${peerId}] Stream tracks:`, stream.getTracks());
-      console.log(`[${peerId}] Video tracks:`, stream.getVideoTracks());
+  useEffect(() => {
+    if (!videoRef.current || !stream) return;
 
-      // Reset before assigning new stream
-      videoRef.current.srcObject = null;
-      videoRef.current.srcObject = stream;
+    console.log("📺 Attaching stream to", peerId);
+    videoRef.current.srcObject = null;
+    videoRef.current.srcObject = stream;
 
-      const tryPlay = async () => {
-        try {
-          await videoRef.current.play();
-          console.log("▶️ Remote video playing for", peerId);
-        } catch (err) {
-          console.warn("🚫 Remote video failed to play", peerId, err);
-        }
-      };
+    const tryPlay = async () => {
+      try {
+        await videoRef.current.play();
+        console.log("▶️ Remote video playing for", peerId);
+      } catch (err) {
+        console.warn("🚫 Remote video failed to play", peerId, err);
+      }
+    };
 
-      tryPlay();
-    }
+    tryPlay();
   }, [stream]);
 
   return (
-    <div className="relative rounded overflow-hidden bg-black">
+    <div className="relative bg-black rounded overflow-hidden">
       <video
-        key={stream?.id} // 🔑 Force React to remount the video element
         ref={videoRef}
         autoPlay
         playsInline
         className="w-full h-64"
-        controls={false}
+        muted={false} // don't mute remote
+        key={peerId}  // force rerender
       />
       <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">
         {peerId}

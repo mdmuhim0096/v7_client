@@ -60,8 +60,9 @@ const GroupVideoCall = () => {
           <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">You</span>
         </div>
         {remoteVideos.map((vid) => (
-          <RemoteVideoTile key={vid.id} stream={vid.stream} peerId={vid.id} />
+          <RemoteVideoTile key={`${vid.id}-${vid.stream.id}`} stream={vid.stream} peerId={vid.id} />
         ))}
+
       </div>
       <div className="flex gap-4 mt-6">
         {!inCall ? (

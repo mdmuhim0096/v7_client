@@ -37,11 +37,15 @@ const createPeerConnection = (peerId, onRemoteStream, callId) => {
   pc.ontrack = (event) => {
     const [remoteStream] = event.streams;
     console.log("🔊 Received remote stream from", peerId, remoteStream);
+    console.log("📽️ Tracks:", remoteStream.getTracks());
+    console.log("🎥 Video tracks:", remoteStream.getVideoTracks());
+
     if (remoteStream) {
       remoteStreams[peerId] = remoteStream;
       if (onRemoteStream) onRemoteStream(remoteStream, peerId);
     }
   };
+
 
   pc.onicecandidate = (event) => {
     if (event.candidate) {
@@ -111,10 +115,26 @@ export const joinCall = async (callId, userId, onRemoteStream, isCaller) => {
 };
 
 export const hangUp = async (callId, userId) => {
-  Object.values(peerConnections).forEach(pc => pc.close());
+  // Close all peer connections
+  Object.values(peerConnections).forEach((pc) => pc.close());
   peerConnections = {};
   remoteStreams = {};
+
+  // Remove the current user
   await remove(ref(database, `calls/${callId}/users/${userId}`));
+
+  // Check if any users remain
+  const usersRef = ref(database, `calls/${callId}/users`);
+  onValue(usersRef, async (snapshot) => {
+    const users = snapshot.val();
+    if (!users || Object.keys(users).length === 0) {
+      // ✅ No one left, safe to clean the entire call tree
+      await remove(ref(database, `calls/${callId}`));
+      console.log("🧼 All users left, cleaned up call:", callId);
+    } else {
+      console.log("👥 Other users still in call, not deleting:", callId);
+    }
+  }, { onlyOnce: true });
 };
 
 export const toggleMute = () => {
