@@ -1,5 +1,4 @@
 
-// ✅ GroupVideoCall.jsx
 import React, { useRef, useState } from "react";
 import {
   startMedia,
@@ -61,19 +60,8 @@ const GroupVideoCall = () => {
           <span className="absolute top-1 left-2 text-xs bg-gray-800 px-2 py-1 rounded">You</span>
         </div>
         {remoteVideos.map((vid) => (
-          <div key={vid.id}>
-            <video
-              autoPlay
-              playsInline
-              ref={(el) => {
-                if (el) el.srcObject = vid.stream;
-              }}
-              className="w-64 h-48 bg-black"
-            />
-            <p className="text-xs">{vid.id}</p>
-          </div>
+          <RemoteVideoTile key={vid.id} stream={vid.stream} peerId={vid.id} />
         ))}
-
       </div>
       <div className="flex gap-4 mt-6">
         {!inCall ? (
