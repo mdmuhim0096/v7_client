@@ -101,23 +101,28 @@ const Profile = () => {
             <div className='w-full sticky top-0 left-0 z-40'>
                 <Link to={"/"}><ArrowLeft /></Link>
             </div>
-            <div className={`w-full h-full overflow-hidden flex justify-center items-center`}>
-                <div className='w-full h-64 relative overflow-hidden'>
-                    <img className='object-fill w-full h-full' src={user.image} title='cover image' />
-                    <img src={user.image} className='w-24 h-2w-24 border-2 rounded-full absolute bottom-0 left-0' title='profile image' />
-                    <div className={`absolute top-0 left-0 flex justify-center items-center p-5 w-full h-full bg-slate-900 z-50 flex-col ${x ? "block" : "hidden"}`}>
-                        <X  className='absolute top-2 right-2' onClick={() => {setx(false)}}/>
-                        <div className='w-auto border flex justify-center items-center bg-gradient-to-r from-emerald-400 to-cyan-400 p-2 rounded-md'>
-                            <input type="file" className='absolute w-10 opacity-0' onChange={(e) => { setFile(e.target.files[0]) }} />
-                                <ImagePlus />
-                        </div>
-                        <button className='my-3' onClick={() => { updateProfileImage() }}>update</button>
-                    </div>
-                    <div onClick={() => { setx(true) }} className='w-10 h-10 rounded-full bg-slate-600 absolute bottom-10 left-20 flex justify-center items-center'>
+
+            <div className={`w-full h-[50vh] sm:h-[60vh] md:h-[80vh] relative`}>
+
+                <img className='w-full h-full opacity-85' src={user?.image} title='cover image' />
+                <div className='absolute bottom-0 left-0'>
+                    <img src={user?.image} className='w-24 h-24 rounded-full sm:w-44 sm:h-44 md:w-56 md:h-56 shadow-2xl m-3' title='profile image' />
+                    <div onClick={() => { setx(true) }} className='w-10 h-10 rounded-full bg-slate-600 absolute top-5 right-5 flex justify-center items-center'>
                         <Pencil />
                     </div>
                 </div>
+                <div className={`absolute top-0 left-0 w-full h-full z-30 backdrop-blur-lg backdrop-brightness-75 ${x ? "block" : "hidden"}`}>
+                    <X className='' onClick={() => { setx(false) }} />
+                    <div className='w-full h-full flex flex-col justify-center items-center'>
+                        <div className='w-12 border flex justify-center items-center bg-gradient-to-r from-emerald-400 to-cyan-400 p-2 rounded-md'>
+                            <input type="file" className='absolute w-10 opacity-0' onChange={(e) => { setFile(e.target.files[0]) }} />
+                            <ImagePlus />
+                        </div>
+                        <button className='my-3' onClick={() => { updateProfileImage() }}>update</button>
+                    </div>
+                </div>
             </div>
+
             <div className='h-auto flex justify-between items-start md:items-center p-1 md:p-4 flex-col gap-2'>
                 <div className='flex items-center justify-center gap-5 mt-2'>
                     <h4 className='text-2xl md:text-5xl font-semibold'>{user.name}</h4>
@@ -141,8 +146,8 @@ const Profile = () => {
                 <div className='p-[3px] border w-full max-h-auto rounded-lg bg-gradient-to-r from-green-400 to-blue-500 flex justify-center items-center'>
                     <div className='bg-slate-800 h-full max-h-auto w-full rounded-md p-1'>
                         <div className='flex items-center justify-start'>
-                            <h4 className=''>Email:- {user.email}</h4>
-                            <span onClick={() => { seta(true); setemail(user.email) }} className={`border-2 bg-slate-600 rounded-full w-5 h-5 flex justify-center items-center p-1 mx-3 ${!a ? "block" : "hidden"}`}>
+                            <h4 className=''>Email:- {user?.email}</h4>
+                            <span onClick={() => { seta(true); setemail(user?.email) }} className={`border-2 bg-slate-600 rounded-full w-5 h-5 flex justify-center items-center p-1 mx-3 ${!a ? "block" : "hidden"}`}>
                                 <Pencil />
                             </span>
                             <div className={`gap-5 ${a ? "flex" : "hidden"}`}>
@@ -189,8 +194,8 @@ const Profile = () => {
                 <div className='p-[3px] border w-full h-[111.5px] rounded-lg bg-gradient-to-r from-green-400 to-blue-500 flex justify-center items-center'>
                     <div className='bg-slate-800 h-full w-full rounded-md p-1'>
                         <h1>Friends</h1>
-                        <div className='my-3 flex justify-start items-center'>{user.friends?.map((data, index) => (
-                            <img key={index} className={`w-5 h-5 rounded-full ${index > 0 ? "-ml-2" : ""}`} src={server_port + "/" + data.image} />
+                        <div className='my-3 flex justify-start items-center'>{user?.friends?.map((data, index) => (
+                            <img key={index} className={`w-5 h-5 rounded-full ${index > 0 ? "-ml-2" : ""}`} src={data?.image} />
                         ))}</div>
                     </div>
                 </div>
@@ -203,7 +208,7 @@ const Profile = () => {
                                 <Ellipsis />
                             </span>
                         </div>
-                        <Seemore text={user.bio} range={150}/>
+                        <Seemore text={user.bio} range={150} />
                     </div>
                 </div>
             </div>

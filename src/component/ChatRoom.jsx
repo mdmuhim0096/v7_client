@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { myfriends_api, server_port } from './api';
-import { ArrowLeft, Rocket, Reply, Ellipsis, Trash, RemoveFormatting, X, Settings, ArrowUp, FolderUp, ArrowDown, ShieldBan, Video, Phone, UserMinus, UserPlus, Plus, MoveRight, LogOut, SyringeIcon, SmilePlus } from "lucide-react";
+import { ArrowLeft, Rocket, Reply, Ellipsis, Trash, RemoveFormatting, X, Settings, ArrowUp, FolderUp, ArrowDown, ShieldBan, Video, Phone, UserMinus, UserPlus, Plus, MoveRight, LogOut, SmilePlus, TurtleIcon } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import socket from './socket';
@@ -38,6 +38,7 @@ const ChatRoom = () => {
     const [isCreatingGroup, setCreatingroup] = useState(false);
     const [isCahtTab, setIsChatTap] = useState(false);
     const [endLoad, setLoadEnd] = useState(true);
+     const [endLoad2, setLoadEnd2] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [isShowEmoji, setIsShowEmoji] = useState(false);
 
@@ -67,6 +68,7 @@ const ChatRoom = () => {
 
     async function get_my_friends() {
         try {
+            setLoadEnd2(false);
             const res = await axios.get(myfriends_api, { withCredentials: true });
             setFriends(res?.data?.data);
         } catch (error) {
@@ -76,8 +78,11 @@ const ChatRoom = () => {
 
     async function get_my_groups() {
         try {
-            const res = await axios.get(server_port + "/api/group/myGroup/" + localStorage.getItem("myId"));
-            setGroups(res?.data?.groups?.groups)
+             await axios.get(server_port + "/api/group/myGroup/" + localStorage.getItem("myId")).then(res => {
+                setGroups(res?.data?.groups?.groups);
+                setLoadEnd2(true);
+            })
+
         } catch (error) {
             console.log(error);
         }
@@ -631,6 +636,7 @@ const ChatRoom = () => {
 
     return (
         <div className='sm:flex h-screen overflow-y-auto'>
+            <LoaderContainer type={"load"} loadEnd={endLoad2}/>
             <ToastContainer
                 position="top-right"
                 autoClose={1000}

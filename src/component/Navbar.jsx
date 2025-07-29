@@ -21,11 +21,10 @@ const Navbar = () => {
 
     useEffect(() => {
         getnumber();
-        document.title = numberofnoti > 0 ? `chat room (${numberofnoti})` : "Chat Room";
-        const loadData = (e) => { getnumber() };
-        socket.on("__load_data__", loadData);
+        const loadData = (e) => { getnumber()};
+        socket.on("comment", loadData);
         return () => {
-            socket.off("__load_data__", loadData);
+            socket.off("comment", loadData);
         };
     }, []);
 

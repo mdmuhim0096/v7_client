@@ -26,6 +26,7 @@ import { server_port } from "./component/api";
 import VideoCall from "./component/VideoCall";
 import AudioCall from "./component/Audiocall";
 import GroupVideoCall from "./component/GroupVideoCall";
+import CommentRenderer from "./component/CommentRenderer";
 
 const App = () => {
   const [styleSheet, setStyleSheet] = useState("");
@@ -70,6 +71,7 @@ const App = () => {
           <Route path="/v" element={<VideoCall />} />
           <Route path="/audiocall" element={<AudioCall />} />
           <Route path="/groupvideocall" element={<GroupVideoCall />} />
+          <Route path="/commentplate" element={<CommentRenderer />} />
           <Route path="/*" element={<div className="text-white">Coming Soon!</div>} />
         </Routes>
       </BrowserRouter>
