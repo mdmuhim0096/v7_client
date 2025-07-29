@@ -11,11 +11,28 @@
   <link rel="shortcut icon" href="public/assets/logo/chatlogo.png" type="image/x-icon">
   <title>Chat Room</title>
 </head>
-<body class="overflow-y-auto">
+<body class="overflow-y-auto" >
   <div id="root"></div>
   <audio src="./src/sound/message.mp3" id='notifications'></audio>
   <audio src="./src/sound/call.mp3" id='calltone'></audio>
   <audio src="./src/sound/replay.mp3" id='replay'></audio>
   <script type="module" src="./src/main.jsx"></script>
+  <script>
+    function goFullscreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    };
+    document.body.addEventListener("touchstart", () => {
+      goFullscreen()
+    }, {once: true})
+  </script>
 </body>
 </html>
