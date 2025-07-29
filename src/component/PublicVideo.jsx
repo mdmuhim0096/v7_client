@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import axios from 'axios';
-import { server_port } from './api';
+import { server_port, myfriends_api } from './api';
 import { Ellipsis, X, Share2, MessageSquareIcon, ThumbsUp, Save, Link2Icon } from "lucide-react";
 import Seemore from './Seemore';
 import { Link, useLocation } from "react-router-dom";
@@ -12,6 +12,8 @@ const PublicVideo = () => {
     const location = useLocation();
     const [videos, setVideos] = useState([]);
     const [endLoad, setEndLoad] = useState(true);
+    const [friends, setFriends] = useState(null);
+
     useEffect(() => {
         try {
             const getPublicVideo = async () => {
@@ -20,6 +22,8 @@ const PublicVideo = () => {
                     setVideos(res.data.videos);
                     setEndLoad(true);
                 });
+                const res = await axios.get(myfriends_api, { withCredentials: true });
+                setFriends(res.data.data);
             }
             getPublicVideo();
         } catch (error) {
@@ -53,7 +57,7 @@ const PublicVideo = () => {
 
     return (
         <div className='sm:p-4 h-screen overflow-y-auto text-sm p-1' id='postInnerContainer' >
-            <LoaderContainer type={"load"} loadEnd={endLoad}/>
+            <LoaderContainer type={"load"} loadEnd={endLoad} />
             <div className='sticky top-0 z-50'>
                 <Navbar />
             </div>
@@ -90,9 +94,10 @@ const PublicVideo = () => {
                                 <MessageSquareIcon />
                                 <span>{formatNumber(data?.comments?.length)}</span>
                             </Link>
-                            <span className='post_footer w-4/12 justify-end' >
+                            <Link to={"/share"} state={{ friends, post: data?._id }}
+                            className=' w-4/12 flex justify-end'>
                                 <Share2 />
-                            </span>
+                            </Link>
                         </footer>
                     </div>
                 ))

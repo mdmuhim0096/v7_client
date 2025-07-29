@@ -8,11 +8,12 @@ import { simpleInfo_api } from './api';
 import { ArrowUp, ArrowDown, ClipboardList, LayoutDashboard, LogOut, CalendarPlus, Settings, X, AlignLeft } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { active } from "../utils/utils"
-import { v4 as uuidv4 } from 'uuid';
+import { active } from "../utils/utils";
+
 const LazyComponent = lazy(() => import("./PublicPost"));
 
 let postLength = 0;
+
 export const submitLength = (l) => {
     postLength = l;
 }
@@ -74,7 +75,7 @@ const Home = () => {
 
     const goToBottom = () => {
         const chat_container = document.getElementById("postcontainer");
-        chat_container.scrollTo({ top: chat_container.scrollHeight })
+        chat_container.scrollTo({ top: chat_container.scrollHeight, behavior: "smooth"})
     }
 
     useEffect(() => {
@@ -114,7 +115,7 @@ const Home = () => {
                     <Link to={"/"} onClick={() => { logOut() }}><li><LogOut />Log out</li></Link>
                 </ul>
                 <ul className="w-full h-[88vh] overflow-y-auto relative scroll-smoothm" id='postcontainer'>
-                    <Suspense fallback={<div>Loading...</div>} ><LazyComponent /></Suspense>
+                    <Suspense><LazyComponent /></Suspense>
                     <div id='toTopBtn' className={`cursor-pointer w-10 h-10 bg-blue-500 rounded-md flex justify-center items-center text-white sticky bottom-2 sm:bottom-4 sm:left-5 ${postLength <= 1.6 ? "hidden" : ""}`} onClick={() => {
                         const containerHeight = document.getElementById("postcontainer");
                         scrollDown ? goToBottom() :

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import axios from 'axios';
-import { mypost_api, server_port } from './api';
+import { mypost_api, server_port, myfriends_api } from './api';
 import { Ellipsis, X, Share2, MessageSquareIcon, ThumbsUp, Rocket } from "lucide-react";
 import Seemore from './Seemore';
 import { Link, useLocation } from "react-router-dom";
@@ -10,11 +10,15 @@ const Mypost = () => {
     const location = useLocation();
     const [posts, setPost] = useState([]);
     const [load, setLoad] = useState(0);
+    const [friends, setFriends] = useState(null);
+
     useEffect(() => {
         try {
             const getMyPost = async () => {
                 const res = await axios.get(mypost_api, { withCredentials: true })
                 setPost(res.data.data);
+                const res_ = await axios.get(myfriends_api, { withCredentials: true });
+                setFriends(res_.data.data);
             }
             getMyPost();
         } catch (error) {
@@ -22,27 +26,6 @@ const Mypost = () => {
         }
     }, [load]);
 
-
-    const [post_info, setPost_info] = useState([]);
-    const [post_id, setPost_id] = useState("");
-
-    useEffect(() => {
-        try {
-            const getPostInfo = async (id) => {
-                const res = await axios.get(server_port + `/api/post/postinfo/${id}`);
-                setPost_info(res.data.singlePost);
-                setCommentReplay(res.data.singlePost.comments)
-            }
-            getPostInfo(post_id);
-        } catch (err) {
-            console.log(err)
-        }
-
-    }, [post_id])
-
-    useEffect(() => {
-
-    }, [post_info])
 
     const doLike = (postId) => {
         axios.post(server_port + "/api/post/addlike", { postId }, { withCredentials: true })
@@ -140,9 +123,10 @@ const Mypost = () => {
                                 <MessageSquareIcon />
                                 <span>{formatNumber(data?.comments?.length)}</span>
                             </Link>
-                            <span className='post_footer w-4/12  justify-end'>
+                            <Link to={"/share"} state={{ friends, post: data?._id }}
+                                className=' w-4/12 flex justify-end'>
                                 <Share2 />
-                            </span>
+                            </Link>
                         </footer>
                     </div>
                 ))

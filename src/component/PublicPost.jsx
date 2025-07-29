@@ -7,7 +7,7 @@ import { Link, useLocation } from "react-router-dom";
 import { submitLength } from './Home';
 import { formatNumber } from "../utils/formatenumber";
 import LoaderContainer from './LoaderContainer';
-import {ToastContainer, toast} from "react-toastify"
+import { ToastContainer, toast } from "react-toastify"
 const PublicPost = () => {
     const location = useLocation();
     const [posts, setPost] = useState([]);
@@ -69,7 +69,7 @@ const PublicPost = () => {
     }
     return (
         <div className='sm:p-4 h-auto' id='postInnerContainer' >
-            <LoaderContainer type={"load"} loadEnd={endLoad}/>
+            <LoaderContainer type={"load"} loadEnd={endLoad} />
             <ToastContainer />
             {
                 posts.map((data, index) => (
@@ -116,8 +116,9 @@ const PublicPost = () => {
                             </Link>
 
                             <span className='post_footer w-4/12  justify-end'>
-                                <Share2 />
-                                <Link to={"/share"} state={{ friends, post: data?._id }}></Link>
+                                <Link to={"/share"} state={{ friends, post: data?._id }}>
+                                    <Share2 />
+                                </Link>
                             </span>
                         </footer>
                     </div>

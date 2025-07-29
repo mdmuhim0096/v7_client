@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import Seemore from './Seemore';
-import { server_port, send_request_api } from './api';
+import { server_port, send_request_api, myfriends_api } from './api';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Ellipsis, X, Share2, MessageSquareIcon, ThumbsUp, Copy, CopyCheck, MoveLeft, MoveRight } from "lucide-react";
 import { formatNumber } from '../utils/formatenumber';
@@ -14,8 +14,9 @@ const Publicprofile = () => {
     const [posts, setPost] = useState([]);
     const [user, setUser] = useState("");
     const [requsetStatus, setStatus] = useState("");
+    const [friends, setFriends] = useState(null);
 
-    if(!localStorage.getItem("isForword")){
+    if (!localStorage.getItem("isForword")) {
         localStorage.setItem("isForword", false);
     }
 
@@ -35,6 +36,11 @@ const Publicprofile = () => {
 
     useEffect(() => {
         get_all_information();
+        const get_my_friends = async () => {
+            const res = await axios.get(myfriends_api, { withCredentials: true });
+            setFriends(res.data.data);
+        }
+        get_my_friends()
     }, []);
 
     async function sendFriendRquest(receiverId) {
@@ -170,9 +176,12 @@ const Publicprofile = () => {
                                             <MessageSquareIcon />
                                             <span>{formatNumber(data?.comments?.length)}</span>
                                         </Link>
-                                        <span className='post_footer w-4/12  justify-end'>
+                                        <Link
+                                            to={"/share"} state={{ friends, post: data?._id }}
+                                            className='w-4/12 flex justify-end'
+                                        >
                                             <Share2 />
-                                        </span>
+                                        </Link>
                                     </footer>
                                 </div>
                             ))

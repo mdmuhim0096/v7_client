@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { server_port } from './api';
+import { server_port, myfriends_api } from './api';
 import { Ellipsis, X, Share2, MessageSquareIcon, ThumbsUp, Rocket } from "lucide-react";
 import Seemore from './Seemore';
 import { Link, useLocation } from "react-router-dom";
@@ -12,12 +12,15 @@ import { formatNumber } from '../utils/formatenumber';
 const Save = () => {
     const location = useLocation();
     const [saves, setSave] = useState([]);
+    const [friends, setFriends] = useState(null);
 
     useEffect(() => {
         const getSave = async () => {
             const myId = localStorage.getItem("myId");
             const res = await axios.get(server_port + "/api/save/save/" + myId);
             setSave(res.data.save);
+            const res_ = await axios.get(myfriends_api, { withCredentials: true });
+            setFriends(res_.data.data);
         }
         getSave();
     }, []);
@@ -39,7 +42,6 @@ const Save = () => {
             {
                 saves?.map((data, index) => (
                     <div key={index} className='sm:w-6/12 mx-auto w-full h-auto rounded-lg p-2 backdrop-blur-md my-5 bg-slate-900'>
-
 
                         <div className='flex justify-between items-center border-b-2 border-cyan-700 mb-3'>
                             <div className='flex justify-between items-center gap-2'>
@@ -77,9 +79,10 @@ const Save = () => {
                                 <MessageSquareIcon />
                                 <span>{formatNumber(data?.postId?.comments?.length)}</span>
                             </Link>
-                            <span className='post_footer w-4/12 justify-end'>
+                            <Link to={"/share"} state={{ friends, post: data?._id }}
+                                className=' w-4/12 flex justify-end'>
                                 <Share2 />
-                            </span>
+                            </Link>
                         </footer>
                     </div>
                 ))
