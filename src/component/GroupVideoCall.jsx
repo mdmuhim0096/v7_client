@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { startMedia, joinCall, hangUp } from "../utils/groupVideoCallUtils";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -7,6 +7,7 @@ const GroupVideoCall = () => {
   const navigate = useNavigate();
   const localVideoRef = useRef(null);
   const [remoteStreams, setRemoteStreams] = useState([]);
+  const remoteVideoRefs = useRef({}); // Store refs by stream ID
   const [inCall, setInCall] = useState(false);
 
   const handleRemoteStream = (stream) => {
@@ -30,13 +31,29 @@ const GroupVideoCall = () => {
     window.location.reload();
   };
 
+  // Set video.srcObject after stream updates
+  useEffect(() => {
+    remoteStreams.forEach((stream) => {
+      const videoEl = remoteVideoRefs.current[stream.id];
+      if (videoEl && videoEl.srcObject !== stream) {
+        videoEl.srcObject = stream;
+      }
+    });
+  }, [remoteStreams]);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <h2 className="text-2xl mb-4">Group Video Call</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bg-black rounded overflow-hidden">
-          <video ref={localVideoRef} autoPlay muted playsInline className="w-full h-48 object-cover" />
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-48 object-cover"
+          />
           <div className="text-xs p-1 bg-gray-800 text-white text-center">You</div>
         </div>
 
@@ -46,8 +63,8 @@ const GroupVideoCall = () => {
               autoPlay
               playsInline
               className="w-full h-48 object-cover"
-              ref={(video) => {
-                if (video) video.srcObject = stream;
+              ref={(el) => {
+                if (el) remoteVideoRefs.current[stream.id] = el;
               }}
             />
             <div className="text-xs p-1 bg-gray-800 text-white text-center">Peer</div>
