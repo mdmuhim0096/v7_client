@@ -7,7 +7,7 @@ const GroupVideoCall = () => {
   const navigate = useNavigate();
   const localVideoRef = useRef(null);
   const [remoteStreams, setRemoteStreams] = useState([]);
-  const remoteVideoRefs = useRef({}); // Store refs by stream ID
+  const remoteVideoRefs = useRef({});
   const [inCall, setInCall] = useState(false);
 
   const handleRemoteStream = (stream) => {
@@ -31,7 +31,6 @@ const GroupVideoCall = () => {
     window.location.reload();
   };
 
-  // Set video.srcObject after stream updates
   useEffect(() => {
     remoteStreams.forEach((stream) => {
       const videoEl = remoteVideoRefs.current[stream.id];
@@ -74,17 +73,11 @@ const GroupVideoCall = () => {
 
       <div className="mt-6 flex gap-4">
         {!inCall ? (
-          <button
-            onClick={handleStart}
-            className="bg-green-600 px-4 py-2 rounded"
-          >
+          <button onClick={handleStart} className="bg-green-600 px-4 py-2 rounded">
             Start Call
           </button>
         ) : (
-          <button
-            onClick={handleLeave}
-            className="bg-red-600 px-4 py-2 rounded"
-          >
+          <button onClick={handleLeave} className="bg-red-600 px-4 py-2 rounded">
             Leave Call
           </button>
         )}
