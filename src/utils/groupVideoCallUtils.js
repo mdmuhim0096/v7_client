@@ -23,8 +23,14 @@ const createPeerConnection = (peerId, onRemoteStream, callId) => {
 
   pc.ontrack = (event) => {
     const [remoteStream] = event.streams;
-    if (remoteStream) {
-      console.log("📡 Remote track from", peerId, remoteStream.getTracks());
+    if (!remoteStream) return;
+
+    const hasVideo = remoteStream.getVideoTracks().some((track) => track.enabled);
+    const hasAudio = remoteStream.getAudioTracks().some((track) => track.enabled);
+
+    console.log("📡 Incoming stream from", peerId, { hasVideo, hasAudio });
+
+    if (hasVideo || hasAudio) {
       onRemoteStream(remoteStream);
     }
   };

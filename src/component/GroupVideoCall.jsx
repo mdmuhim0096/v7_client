@@ -11,6 +11,7 @@ const GroupVideoCall = () => {
   const [inCall, setInCall] = useState(false);
 
   const handleRemoteStream = (stream) => {
+    console.log("📥 Received remote stream", stream.id, stream.getTracks());
     setRemoteStreams((prev) => {
       if (prev.find((s) => s.id === stream.id)) return prev;
       return [...prev, stream];
@@ -36,6 +37,8 @@ const GroupVideoCall = () => {
       const videoEl = remoteVideoRefs.current[stream.id];
       if (videoEl && videoEl.srcObject !== stream) {
         videoEl.srcObject = stream;
+        videoEl.load(); // 👈 forces reload (important for Android devices)
+        videoEl.play().catch((e) => console.warn("Playback error:", e));
       }
     });
   }, [remoteStreams]);
@@ -61,11 +64,17 @@ const GroupVideoCall = () => {
             <video
               autoPlay
               playsInline
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-cover bg-gray-700"
+              onError={(e) => console.error("Video error", e)}
+              onLoadedMetadata={(e) => {
+                const vid = e.target;
+                vid.play().catch((err) => console.warn("Auto-play issue:", err));
+              }}
               ref={(el) => {
                 if (el) remoteVideoRefs.current[stream.id] = el;
               }}
             />
+
             <div className="text-xs p-1 bg-gray-800 text-white text-center">Peer</div>
           </div>
         ))}
