@@ -12,7 +12,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import Timer from "./Timer";
-import { tone } from "../utils/soundprovider";
+import { tone } from "../utils/soundprovider.js";
 
 function VideoCall() {
     const navigate = useNavigate();

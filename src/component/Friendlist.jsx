@@ -7,8 +7,8 @@ import { Link, useNavigate } from "react-router-dom";
 import ShortText from './ShortText';
 import { Plus } from 'lucide-react';
 import LoaderContainer from './LoaderContainer';
-import { isMatchGroup } from '../utils/utils';
-import {tone} from "../utils/soundprovider";
+import { isMatchGroup } from '../utils/utils.js';
+import {tone} from "../utils/soundprovider.js";
 
 const Friendlist = () => {
     const [friends, setFriends] = useState([]);
