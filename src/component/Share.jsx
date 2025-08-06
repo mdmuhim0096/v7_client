@@ -4,8 +4,12 @@ import { server_port } from './api';
 import axios from 'axios';
 import ShortText from "./ShortText";
 import { MoveLeft } from 'lucide-react';
+import {tone} from "../utils/soundprovider";
+import { isMatchGroup } from '../utils/utils';
+import socket from "./socket";
 
 const Share = () => {
+    const {callTone} = tone;
     const friends = useLocation().state?.friends, postId = useLocation().state?.post;
     const [Groups, setGroup] = useState([]);
 
@@ -45,6 +49,92 @@ const Share = () => {
         axios.post(server_port + "/api/share/sharegroup", { sender: myId, realTime, shareId, group, messageType: "share" });
     }
 
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+    
+            socket.on("incoming_call_a", handleIncomingCall);
+            return () => {
+                socket.off("incoming_call_a", handleIncomingCall);
+            }
+        }, []);
+    
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+    
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/v", { state: { callId: data.callId } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                };
+            }
+    
+            socket.on("____incoming_call____", handleIncomingCall);
+            return () => {
+                socket.off("____incoming_call____", handleIncomingCall);
+            };
+    
+        }, []);
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_room", handelRoom);
+        return () => {
+            socket.off("join_room", handelRoom);
+        }
+    }, [])
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupaudiocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_audio_room", handelRoom);
+        return () => {
+            socket.off("join_audio_room", handelRoom);
+        }
+    }, []);
+    
     return (
         <div className='h-screen overflow-y-auto scroll-smooth p-2'>
             <h1 className='my-1 mb-2'>Friends</h1>

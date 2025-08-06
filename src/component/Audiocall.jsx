@@ -6,8 +6,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Animation from "./Animation";
 import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import Timer from "./Timer";
-
+import { tone } from "../utils/soundprovider";
 const AudioCall = () => {
+
     const navigate = useNavigate();
     const location = useLocation();
     const { callId, userId, role, isDail, info } = location?.state || {};
@@ -35,6 +36,8 @@ const AudioCall = () => {
 
     async function joinCall__() {
         try {
+            if (tone.callTone)
+                tone.callTone.pause();
             const { localStream } = await startMedia(localAudioRef.current);
             localStreamRef.current = localStream;
             await joinCall(callId, localStream, remoteAudioRef.current);
@@ -46,6 +49,8 @@ const AudioCall = () => {
     };
 
     const hangUpCall = () => {
+        if (tone.callTone)
+            tone.callTone.pause();
         hangUp(callId);
         socket.emit("end_call_a", callId);
         navigate("/chatroom");
@@ -68,7 +73,10 @@ const AudioCall = () => {
 
     useEffect(() => {
         const joinHandler = (data) => {
+
             if (data === localStorage.getItem("userId")) {
+                if (tone.callTone)
+                    tone.callTone.pause();
                 setIsCallStart(true);
             }
         };
@@ -88,7 +96,7 @@ const AudioCall = () => {
                 </div>
                 {isCallStart === true ?
                     <Timer isCallActive={isCallStart} /> : null}
-                    
+
                 <h1 id="collername" className="capitalize font-bold text-xl md:text-2xl bg-gradient-to-tr from-blue-600 via-green-600 to-red-700 bg-clip-text text-transparent">{role === "receiver" ? info?.name_ : localStorage.getItem("userName")}</h1>
                 <div className="mt-4 flex gap-8 items-center justify-center">
                     <span onClick={joinCall__} className={`text-green-500 ${isDail ? "hidden" : ""} hover:border cursor-pointer p-1 rounded-lg hover:border-blue-500 duration-200`}>

@@ -6,11 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import ToggleBtn from "./ToggleBtn";
 import { ToastContainer, toast } from "react-toastify"
 import { server_port } from './api';
+import socket from "./socket";
+import {tone} from "../utils/soundprovider";
+import { isMatchGroup } from '../utils/utils';
 
 const Settings = () => {
 
     const navigate = useNavigate();
-
+    const {callTone} = tone;
     const fontFamilyArray = ["font-sans", "font-serif", "font-mono", "font-inter", "font-roboto", "font-poppins", "font-open-sans", "font-lato", "font-ubuntu", "font-josefin", "font-raleway"];
 
     const myDBid = () => localStorage.getItem("myId");
@@ -48,6 +51,7 @@ const Settings = () => {
     const [newPassword, setNewPassword] = useState("");
     const [isLoad, setIsLoad] = useState(false);
     const [isNew, setIsNew] = useState(false);
+
     const getPermision = async () => {
         setIsLoad(true)
         try {
@@ -95,7 +99,7 @@ const Settings = () => {
             setIsActive(res.data.data.isActive);
         }
         getStatus();
-    }, [load])
+    }, [load]);
 
     const handelStatus = () => {
         setLoad(load + 1);
@@ -103,6 +107,93 @@ const Settings = () => {
         axios.post(server_port +`/api/people/${isActive ? "dactiveuser" : "activeuser"}`, { userId });
         localStorage.setItem("isTurn", isActive ? false : true)
     }
+
+    
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+    
+            socket.on("incoming_call_a", handleIncomingCall);
+            return () => {
+                socket.off("incoming_call_a", handleIncomingCall);
+            }
+        }, []);
+    
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+    
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/v", { state: { callId: data.callId } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                };
+            }
+    
+            socket.on("____incoming_call____", handleIncomingCall);
+            return () => {
+                socket.off("____incoming_call____", handleIncomingCall);
+            };
+    
+        }, []);
+    
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_room", handelRoom);
+        return () => {
+            socket.off("join_room", handelRoom);
+        }
+    }, [])
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupaudiocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_audio_room", handelRoom);
+        return () => {
+            socket.off("join_audio_room", handelRoom);
+        }
+    }, []);
 
     return (
         <div className='p-4 h-screen overflow-y-auto'>

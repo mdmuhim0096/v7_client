@@ -4,7 +4,12 @@ import { MoveLeft, Plus } from 'lucide-react';
 import { server_port } from './api';
 import { useNavigate } from 'react-router-dom';
 import LoaderContainer from "./LoaderContainer";
+import { isMatchGroup } from '../utils/utils';
+import {tone} from "../utils/soundprovider";
+import socket from "./socket";
+
 const Groupsettings = () => {
+    const {callTone} = tone;
     const [members, setMembers] = useState([]);
     const [isLoadEnd, setIsLoadEnd] = useState(false); // Don't use [null], just []
     const navigate = useNavigate();
@@ -22,6 +27,7 @@ const Groupsettings = () => {
                 console.error("Error fetching members:", err);
             });
     }
+    
     useEffect(() => {
         getMembers()
     }, [load]);
@@ -36,6 +42,95 @@ const Groupsettings = () => {
                 console.error("Error adding members:", err);
             });
     };
+
+     
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+    
+            socket.on("incoming_call_a", handleIncomingCall);
+            return () => {
+                socket.off("incoming_call_a", handleIncomingCall);
+            }
+        }, []);
+    
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+    
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/v", { state: { callId: data.callId } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                };
+            }
+    
+            socket.on("____incoming_call____", handleIncomingCall);
+            return () => {
+                socket.off("____incoming_call____", handleIncomingCall);
+            };
+    
+        }, []);
+   
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_room", handelRoom);
+        return () => {
+            socket.off("join_room", handelRoom);
+        }
+    }, [])
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupaudiocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_audio_room", handelRoom);
+        return () => {
+            socket.off("join_audio_room", handelRoom);
+        }
+    }, []);
+    
+    
 
     return (
         <div className='flex flex-wrap gap-5 p-2 h-screen relative'>

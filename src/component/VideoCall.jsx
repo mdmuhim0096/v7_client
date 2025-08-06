@@ -12,6 +12,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import Timer from "./Timer";
+import { tone } from "../utils/soundprovider";
 
 function VideoCall() {
     const navigate = useNavigate();
@@ -46,6 +47,9 @@ function VideoCall() {
     useEffect(() => {
         const cutCall = (data) => {
             if (callId === data) {
+                if (tone.callTone) {
+                    tone.callTone.pause();
+                }
                 hangUp();
                 navigate("/chatroom");
                 window.location.reload();
@@ -60,6 +64,9 @@ function VideoCall() {
     useEffect(() => {
         const handleJoinCall = (data) => {
             if (callId === data) {
+                if (tone.callTone) {
+                    tone.callTone.pause();
+                }
                 setIsCalling(true);
             }
         };
@@ -69,9 +76,12 @@ function VideoCall() {
         };
     }, [])
 
-    // Receiver: only start media on button click //
+
     const handleJoinCall = async () => {
         try {
+            if (tone.callTone) {
+                tone.callTone.pause();
+            }
             const { localStream } = await startMedia(localVideoRef.current);
             localStreamRef.current = localStream;
 
@@ -85,6 +95,9 @@ function VideoCall() {
 
     async function handleHangUp() {
         try {
+            if (tone.callTone) {
+                tone.callTone.pause();
+            }
             socket.emit("end_call", callId)
             await hangUp(callId);
             navigate("/chatroom");

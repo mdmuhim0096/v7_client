@@ -7,7 +7,8 @@ import { Link, useLocation } from "react-router-dom";
 import { submitLength } from './Home';
 import { formatNumber } from "../utils/formatenumber";
 import LoaderContainer from './LoaderContainer';
-import { ToastContainer, toast } from "react-toastify"
+import { ToastContainer, toast } from "react-toastify";
+
 const PublicPost = () => {
     const location = useLocation();
     const [posts, setPost] = useState([]);
@@ -61,12 +62,14 @@ const PublicPost = () => {
     const [isSave, setIsSave] = useState(false);
     const [idForSave, setIdForSave] = useState("");
 
-    const menuContext = () => {
+    const menuContext = (pid, rid) => {
+
         isSave ? toast(() => (<div className='flex flex-col gap-2'>
             <h6 className='italic flex justify-start items-center gap-2 cursor-pointer' onClick={() => { save(idForSave) }}><Save /> save this</h6>
-            <h6 className='italic flex justify-start items-center gap-2 cursor-pointer' onClick={() => { save(idForSave) }}><Link2Icon /> copy link this</h6>
+            <Link className='italic flex justify-start items-center gap-2 cursor-pointer' state={{ pid, rid }} to={"/report"}>Report</Link>
         </div>)) : () => { return };
     }
+
     return (
         <div className='sm:p-4 h-auto' id='postInnerContainer' >
             <LoaderContainer type={"load"} loadEnd={endLoad} />
@@ -82,7 +85,7 @@ const PublicPost = () => {
                                 <h4 className='hover:text-blue-600 duration-200'>{data?.postOwner?.name}</h4>
                             </Link>
                             <div className='flex justify-between items-center gap-2'>
-                                <span onClick={() => { setIsSave(true); setIdForSave(data._id); menuContext() }}>
+                                <span onClick={() => { setIsSave(true); setIdForSave(data._id); menuContext(data?._id, data?.postOwner?._id) }}>
                                     <Ellipsis size={48} strokeWidth={1.5} absoluteStrokeWidth />
                                 </span>
                                 <span onClick={() => {

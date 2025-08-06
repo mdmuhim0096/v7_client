@@ -8,6 +8,8 @@ import { server_port } from './api';
 import Navbar from "./Navbar";
 import ShortText from './ShortText';
 import socket from "./socket";
+import { isMatchGroup } from '../utils/utils';
+import {tone} from "../utils/soundprovider";
 
 const CommentRenderer = () => {
     const { post_id, id } = useLocation()?.state || {};
@@ -20,6 +22,7 @@ const CommentRenderer = () => {
     const [commentWoner, setComentWoner] = useState(null);
     const [post_info, setPost_info] = useState([]);
     const notify = (m) => { toast.success(m) };
+    const {callTone} = tone;
 
     const [commentReplay, setCommentReplay] = useState([
         {
@@ -39,6 +42,93 @@ const CommentRenderer = () => {
             console.log(error)
         }
     }
+
+    
+    useEffect(() => {
+        const handleIncomingCall = (data) => {
+            if (data.userId === localStorage.getItem("myId")) {
+                navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("incoming_call_a", handleIncomingCall);
+        return () => {
+            socket.off("incoming_call_a", handleIncomingCall);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleIncomingCall = (data) => {
+
+            if (data.userId === localStorage.getItem("myId")) {
+                navigate("/v", { state: { callId: data.callId } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+        }
+
+        socket.on("____incoming_call____", handleIncomingCall);
+        return () => {
+            socket.off("____incoming_call____", handleIncomingCall);
+        };
+
+    }, []);
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_room", handelRoom);
+        return () => {
+            socket.off("join_room", handelRoom);
+        }
+    }, [])
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupaudiocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_audio_room", handelRoom);
+        return () => {
+            socket.off("join_audio_room", handelRoom);
+        }
+    }, []);
 
     useEffect(() => {
         getPostInfo(post_id);

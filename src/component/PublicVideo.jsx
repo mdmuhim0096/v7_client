@@ -3,12 +3,17 @@ import axios from 'axios';
 import { server_port, myfriends_api } from './api';
 import { Ellipsis, X, Share2, MessageSquareIcon, ThumbsUp, Save, Link2Icon } from "lucide-react";
 import Seemore from './Seemore';
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { formatNumber } from '../utils/formatenumber';
 import LoaderContainer from './LoaderContainer';
+import {tone} from "../utils/soundprovider";
+import { isMatchGroup } from '../utils/utils';
+import socket from "./socket";
 
 const PublicVideo = () => {
+    const navigate = useNavigate();
+    const {callTone} = tone;
     const location = useLocation();
     const [videos, setVideos] = useState([]);
     const [endLoad, setEndLoad] = useState(true);
@@ -30,6 +35,94 @@ const PublicVideo = () => {
             console.log(error)
         }
     }, []);
+
+    
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+    
+            socket.on("incoming_call_a", handleIncomingCall);
+            return () => {
+                socket.off("incoming_call_a", handleIncomingCall);
+            }
+        }, []);
+    
+        useEffect(() => {
+            const handleIncomingCall = (data) => {
+    
+                if (data.userId === localStorage.getItem("myId")) {
+                    navigate("/v", { state: { callId: data.callId } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                };
+            }
+    
+            socket.on("____incoming_call____", handleIncomingCall);
+            return () => {
+                socket.off("____incoming_call____", handleIncomingCall);
+            };
+    
+        }, []);
+    
+        useEffect(() => {
+            const handelRoom = async (data) => {
+    
+                const isMatch = await isMatchGroup(data);
+                if (isMatch) {
+                    navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+    
+            socket.on("join_room", handelRoom);
+            return () => {
+                socket.off("join_room", handelRoom);
+            }
+        }, [])
+    
+        useEffect(() => {
+            const handelRoom = async (data) => {
+    
+                const isMatch = await isMatchGroup(data);
+                if (isMatch) {
+                    navigate("/groupaudiocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                    try {
+                        if (callTone) {
+                            callTone?.play();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+    
+            socket.on("join_audio_room", handelRoom);
+            return () => {
+                socket.off("join_audio_room", handelRoom);
+            }
+        }, []);
+    
 
     const remove_post = (postId) => {
         axios.post(server_port + "/api/people/remove_video_post", { postId }, { withCredentials: true });

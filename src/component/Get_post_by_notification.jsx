@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Share2, MessageSquareIcon, ThumbsUp } from "lucide-react";
 import Seemore from './Seemore';
-
 import { server_port } from './api';
 import Navbar from "./Navbar";
 import { formatNumber } from '../utils/formatenumber';
+import { isMatchGroup } from '../utils/utils';
+import {tone} from "../utils/soundprovider";
+import socket from "./socket";
 
 const Get_post_by_notification = () => {
-
+    const {callTone} = tone;
+    const navigate = useNavigate();
     const _location_ = useLocation();
     const postId = _location_.state?.postId;
     const [posts, setPost] = useState([]);
-    const [commentSum, setComentSum] = useState(0)
+
+    const [commentSum, setComentSum] = useState(0);
     useEffect(() => {
         try {
             const getPublicPost = async () => {
@@ -26,6 +30,93 @@ const Get_post_by_notification = () => {
             getPublicPost();
         } catch (error) {
             console.log(error);
+        }
+    }, []);
+
+    
+    useEffect(() => {
+        const handleIncomingCall = (data) => {
+            if (data.userId === localStorage.getItem("myId")) {
+                navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("incoming_call_a", handleIncomingCall);
+        return () => {
+            socket.off("incoming_call_a", handleIncomingCall);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleIncomingCall = (data) => {
+
+            if (data.userId === localStorage.getItem("myId")) {
+                navigate("/v", { state: { callId: data.callId } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+        }
+
+        socket.on("____incoming_call____", handleIncomingCall);
+        return () => {
+            socket.off("____incoming_call____", handleIncomingCall);
+        };
+
+    }, []);
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_room", handelRoom);
+        return () => {
+            socket.off("join_room", handelRoom);
+        }
+    }, [])
+
+    useEffect(() => {
+        const handelRoom = async (data) => {
+
+            const isMatch = await isMatchGroup(data);
+            if (isMatch) {
+                navigate("/groupaudiocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        socket.on("join_audio_room", handelRoom);
+        return () => {
+            socket.off("join_audio_room", handelRoom);
         }
     }, []);
 
