@@ -27,31 +27,39 @@ import VideoCall from "./component/VideoCall";
 import AudioCall from "./component/Audiocall";
 import GroupVideoCall from "./component/GroupVideoCall";
 import CommentRenderer from "./component/CommentRenderer";
+import Report from "./component/Report";
+import GroupAudioCall from "./component/GroupAudiocall";
+import { active, deactivate } from "../src/utils/utils";
 
 const App = () => {
+
   const [styleSheet, setStyleSheet] = useState("");
 
   useEffect(() => {
-    socket.emit("__load_data__");
     try {
       const mydata = async () => {
         const res = await axios.get(server_port + "/api/people/userStyle", { withCredentials: true })
         const data = res.data?.data?.styles;
-        setStyleSheet(data)
+        setStyleSheet(data);
       }
       mydata();
     } catch (err) {
       console.log(err);
-    }
+    };
+    active();
+
+    window.addEventListener("beforeunload", () => {
+       deactivate();
+    });
   }, [])
 
   return (
     <div className={`${styleSheet?.themebg} ${styleSheet?.textColor} ${styleSheet?.textStyle}`} >
       <BrowserRouter basename="/v3/">
         <Routes>
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Logdin />} />
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/postform" element={<Postform />} />
           <Route path="/friends" element={<Friendlist />} />
           <Route path="/accepts" element={<Accepfriends />} />
@@ -72,6 +80,8 @@ const App = () => {
           <Route path="/audiocall" element={<AudioCall />} />
           <Route path="/groupvideocall" element={<GroupVideoCall />} />
           <Route path="/commentplate" element={<CommentRenderer />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/groupaudiocall" element={<GroupAudioCall />} />
           <Route path="/*" element={<div className="text-white">Coming Soon!</div>} />
         </Routes>
       </BrowserRouter>

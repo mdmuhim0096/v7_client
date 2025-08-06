@@ -5,10 +5,9 @@
 // let peerConnections = {};
 // let myId = null;
 
-// export const startMedia = async (videoRef) => {
-//   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-//   console.log("🎤 Local stream tracks:", localStream.getTracks());
-//   if (videoRef) videoRef.srcObject = localStream;
+// export const startMedia = async () => {
+//   localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+//   console.log("🎤 Local audio stream tracks:", localStream.getTracks());
 //   return localStream;
 // };
 
@@ -25,12 +24,10 @@
 //     const [remoteStream] = event.streams;
 //     if (!remoteStream) return;
 
-//     const hasVideo = remoteStream.getVideoTracks().some((track) => track.enabled);
 //     const hasAudio = remoteStream.getAudioTracks().some((track) => track.enabled);
+//     console.log("📡 Incoming audio stream from", peerId, { hasAudio });
 
-//     console.log("📡 Incoming stream from", peerId, { hasVideo, hasAudio });
-
-//     if (hasVideo || hasAudio) {
+//     if (hasAudio) {
 //       onRemoteStream(remoteStream);
 //     }
 //   };
@@ -45,15 +42,14 @@
 //   return pc;
 // };
 
-// export const joinCall = async (callId, onRemoteStream, info) => {
+// export const joinCall = async (callId, onRemoteStream) => {
 //   myId = crypto.randomUUID();
-//   await set(ref(database, `calls/${callId}/users/${myId}`), { joinedAt: Date.now(), ...info});
-//   socket.emit("join_room", callId);
+//   await set(ref(database, `calls/${callId}/users/${myId}`), { joinedAt: Date.now() });
+//   socket.emit("join_audio_room", callId);
 
 //   const usersRef = ref(database, `calls/${callId}/users`);
 
 //   onChildAdded(usersRef, async (snapshot) => {
-//     const peerData = snapshot.val()
 //     const peerId = snapshot.key;
 //     if (peerId === myId || peerConnections[peerId]) return;
 
@@ -123,10 +119,8 @@
 //   localStream?.getTracks()?.forEach((track) => track.stop());
 //   localStream = null;
 
-//   // Remove own user entry
 //   await remove(ref(database, `calls/${callId}/users/${myId}`));
 
-//   // Stop all signaling listeners
 //   const pathsToClear = [
 //     `calls/${callId}/offers`,
 //     `calls/${callId}/answers`,
@@ -135,10 +129,9 @@
 //   ];
 
 //   pathsToClear.forEach((path) => {
-//     off(ref(database, path)); // Removes all listeners on this path
+//     off(ref(database, path));
 //   });
 
-//   // Remove the whole call if no users left
 //   const usersRef = ref(database, `calls/${callId}/users`);
 //   onValue(usersRef, async (snapshot) => {
 //     const users = snapshot.val();
@@ -149,8 +142,7 @@
 // };
 
 
-
-// groupVideoCallUtils.js
+// groupAudioCallUtils.js
 import { database, ref, set, remove, onChildAdded, onValue, push, off } from "../firebase";
 import socket from "../component/socket";
 
@@ -158,10 +150,9 @@ let localStream = null;
 let peerConnections = {};
 let myId = null;
 
-export const startMedia = async (videoRef) => {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  console.log("🎤 Local stream tracks:", localStream.getTracks());
-  if (videoRef) videoRef.srcObject = localStream;
+export const startMedia = async () => {
+  localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  console.log("🎤 Local audio stream tracks:", localStream.getTracks());
   return localStream;
 };
 
@@ -178,12 +169,10 @@ const createPeerConnection = (peerId, onRemoteStream, callId, peerMeta) => {
     const [remoteStream] = event.streams;
     if (!remoteStream) return;
 
-    const hasVideo = remoteStream.getVideoTracks().some((track) => track.enabled);
     const hasAudio = remoteStream.getAudioTracks().some((track) => track.enabled);
+    console.log("📡 Incoming audio stream from", peerId, { hasAudio });
 
-    console.log("📡 Incoming stream from", peerId, { hasVideo, hasAudio });
-
-    if (hasVideo || hasAudio) {
+    if (hasAudio) {
       onRemoteStream(remoteStream, peerId, peerMeta);
     }
   };
@@ -198,10 +187,10 @@ const createPeerConnection = (peerId, onRemoteStream, callId, peerMeta) => {
   return pc;
 };
 
-export const joinCall = async (callId, onRemoteStream, info) => {
+export const joinCall = async (callId, onRemoteStream, info = {}) => {
   myId = crypto.randomUUID();
   await set(ref(database, `calls/${callId}/users/${myId}`), { joinedAt: Date.now(), ...info });
-  socket.emit("join_room", callId);
+  socket.emit("join_audio_room", callId);
 
   const usersRef = ref(database, `calls/${callId}/users`);
 
