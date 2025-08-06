@@ -1,4 +1,4 @@
-const API = "http://localhost:4000" // https://v7-1y7n.onrender.com/
+const API = "https://v7-1y7n.onrender.com" // https://v7-1y7n.onrender.com/
 
 export const server_port = API;
 export const signup_api = API + "/api/people/signup";
