@@ -30,6 +30,7 @@ import CommentRenderer from "./component/CommentRenderer";
 import Report from "./component/Report";
 import GroupAudioCall from "./component/GroupAudiocall";
 import { active, deactivate } from "../src/utils/utils";
+import Force from "./utils/Force";
 
 const App = () => {
 
@@ -55,6 +56,7 @@ const App = () => {
 
   return (
     <div className={`${styleSheet?.themebg} ${styleSheet?.textColor} ${styleSheet?.textStyle}`} >
+      <Force />
       <BrowserRouter basename="/v3/">
         <Routes>
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />

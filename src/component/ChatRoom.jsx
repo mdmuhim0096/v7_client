@@ -74,7 +74,7 @@ const ChatRoom = () => {
             console.log(error);
         }
     }
-    
+
     async function get_my_groups() {
         try {
             await axios.get(server_port + "/api/group/myGroup/" + localStorage.getItem("myId")).then(res => {
@@ -92,9 +92,9 @@ const ChatRoom = () => {
         const refetch = (e) => {
             get_my_friends();
             setLoadEnd2(true);
-        } 
+        }
         socket.on("alert", refetch);
-        return () => {socket.off("alert", refetch)}
+        return () => { socket.off("alert", refetch) }
     }, [])
 
     useEffect(() => {
@@ -191,10 +191,15 @@ const ChatRoom = () => {
 
             const isMatch = await isMatchGroup(data);
             if (isMatch) {
+
                 navigate("/groupvideocall", { state: { callId: data, isCaller: false, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") } });
+
                 try {
                     if (callTone) {
                         callTone?.play();
+                        callTone.onended = () => {
+                            callTone?.play();
+                        }
                     }
                 } catch (error) {
                     console.log(error);
@@ -202,11 +207,12 @@ const ChatRoom = () => {
             }
         }
 
-        socket.on("join_room", handelRoom);
+        socket.on("join_video_room", handelRoom);
         return () => {
-            socket.off("join_room", handelRoom);
+            socket.off("join_video_room", handelRoom);
         }
-    }, [])
+
+    }, []);
 
     useEffect(() => {
         const handelRoom = async (data) => {
@@ -947,7 +953,7 @@ const ChatRoom = () => {
                                 <h1 className='text-center my-2'>{localStorage.getItem("userName")}</h1>
                             </div>
                             <div className='flex gap-5'>
-                                <Link to={isCahtTab ? "/v" : "/groupvideocall"} state={isCahtTab ? { userId: localStorage.getItem("userId"), isDail: true, callId: __callId__ + localStorage.getItem("userId") } : { callId: localStorage.getItem("groupId"), isCaller: true, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName")}} >
+                                <Link to={isCahtTab ? "/v" : "/groupvideocall"} state={isCahtTab ? { userId: localStorage.getItem("userId"), isDail: true, callId: __callId__ + localStorage.getItem("userId") } : { callId: localStorage.getItem("groupId"), isCaller: true, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") }} >
                                     <Video />
                                 </Link>
                                 <Link to={isCahtTab ? "/audiocall" : "/groupaudiocall"} state={isCahtTab ? { callId: __callId__ + localStorage.getItem("userId"), userId: localStorage.getItem("userId"), isDail: true, info: { img: localStorage.getItem("myImage"), name_: localStorage.getItem("myName") }, role: "caller" } : { callId: localStorage.getItem("groupId"), isCaller: true, image: localStorage.getItem("myImage"), name: localStorage.getItem("myName") }}>
@@ -1074,9 +1080,9 @@ const ChatRoom = () => {
                                                 <div className='relative'>
                                                     <div>
                                                         {data?.share?.media.includes("/postImage/") ?
-                                                            <img src={server_port + "/" + data?.share?.media} className='rounded-xl' /> :
+                                                            <img src={data?.share?.media} className='rounded-xl' /> :
                                                             data?.share?.media.includes("/postVideo/") ?
-                                                                <video src={server_port + "/" + data?.share?.media} className='rounded-xl' controls ></video> :
+                                                                <video src={data?.share?.media} className='rounded-xl' controls ></video> :
                                                                 ""}
                                                     </div>
                                                     <div className='py-2 flex items-center justify-center gap-3'>

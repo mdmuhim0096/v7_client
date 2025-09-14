@@ -7,7 +7,7 @@ const save = (time) => {
 const Timer = ({ isCallActive }) => {
     const [time, setTime] = useState(0); // seconds
     const timerRef = useRef(null);
-
+    
     useEffect(() => {
         if (isCallActive) {
             timerRef.current = setInterval(() => {
@@ -39,7 +39,6 @@ const Timer = ({ isCallActive }) => {
     return (
         <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
             {formatTime(time)}
-           
         </div>
     );
 };

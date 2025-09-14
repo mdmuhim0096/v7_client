@@ -17,6 +17,7 @@
   <audio src="./src/sound/ringtone.mp3" id='calltone'></audio>
   <audio src="./src/sound/reply.mp3" id='replay'></audio>
   <script type="module" src="./src/main.jsx"></script>
+
   <script>
     function goFullscreen() {
       const elem = document.documentElement;
@@ -29,10 +30,8 @@
       } else if (elem.msRequestFullscreen) {
         elem.msRequestFullscreen();
       }
+      return true;
     };
-    document.body.addEventListener("touchstart", () => {
-      goFullscreen()
-    }, {once: true});
 
   </script>
 </body>

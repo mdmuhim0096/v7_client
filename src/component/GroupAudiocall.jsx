@@ -1,120 +1,27 @@
-// import React, { useEffect, useRef, useState } from "react";
-// import { startMedia, joinCall, hangUp } from "../utils/groupAudioCallUtils";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import { tone } from "../utils/soundprovider";
-// import { Phone, PhoneOff } from "lucide-react";
-
-// const GroupAudioCall = () => {
-//     const { callId, isCaller, image, name } = useLocation()?.state || {};
-//     const navigate = useNavigate();
-//     const [remoteStreams, setRemoteStreams] = useState([]);
-//     const remoteAudioRefs = useRef({});
-//     const [inCall, setInCall] = useState(false);
-
-//     const handleRemoteStream = (stream) => {
-//         setRemoteStreams((prev) => {
-//             if (prev.find((s) => s.id === stream.id)) return prev;
-//             return [...prev, stream];
-//         });
-//     };
-
-//     const handleStart = async () => {
-//         if (tone.callTone)
-//             tone.callTone.pause();
-//         await startMedia();
-//         await joinCall(callId, handleRemoteStream, {
-//             name, image, role: isCaller
-//         });
-//         setInCall(true);
-//     };
-
-//     const handleLeave = async () => {
-//         if (tone.callTone);
-//             tone.callTone.pause();
-//         await hangUp(callId);
-//         setRemoteStreams([]);
-//         setInCall(false);
-//         navigate("/chatroom");
-//         window.location.reload();
-//     };
-
-//     useEffect(() => {
-//         if (isCaller === true) {
-//             handleStart();
-//         }
-//     }, [])
-
-//     useEffect(() => {
-//         remoteStreams.forEach((stream) => {
-//             const audioEl = remoteAudioRefs.current[stream.id];
-//             if (audioEl && audioEl.srcObject !== stream) {
-//                 audioEl.srcObject = stream;
-//                 audioEl.play().catch((e) => console.warn("Audio playback error:", e));
-//             }
-//         });
-//     }, [remoteStreams]);
-
-//     return (
-//         <div className="h-screen bg-zinc-900 text-white p-4 relative border">
-//             <h2 className="text-2xl mb-4">Group Audio Call</h2>
-
-//             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-//                 <div className="p-4 rounded">
-//                     <p className="text-lg">🎤 You (Audio only)</p>
-//                 </div>
-
-//                 {remoteStreams.map((stream) => (
-//                     <div key={stream.id} className="bg-zinc-600 p-4 rounded">
-//                         <p className="text-sm">🔊 Peer (Audio only)</p>
-//                         <audio
-//                             autoPlay
-//                             controls
-//                             ref={(el) => {
-//                                 if (el) remoteAudioRefs.current[stream.id] = el;
-//                             }}
-
-//                         />
-//                     </div>
-//                 ))}
-//             </div>
-
-//             <div className="mt-6 flex gap-4 absolute bottom-4 left-[50%] translate-x-[-50%]">
-//                 {isCaller === true || isCaller === "true" ? <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-//                     <PhoneOff className="text-red-500 " onClick={() => { handleLeave() }} />
-//                 </span> :
-//                     <div className="flex w-28 h-auto items-center justify-between">
-//                         <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-//                             <PhoneOff className="text-red-500 " onClick={() => { handleLeave() }} />
-//                         </span>
-//                         <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-//                             <Phone className="text-green-500" onClick={() => { handleStart() }} />
-//                         </span>
-//                     </div>}
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default GroupAudioCall;
 
 import React, { useEffect, useRef, useState } from "react";
 import { startMedia, joinCall, hangUp } from "../utils/groupAudioCallUtils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { tone } from "../utils/soundprovider";
 import { Phone, PhoneOff } from "lucide-react";
+import socket from "./socket";
+import Timer from "./Timer";
+import { isMatchGroup } from "../utils/utils";
 
 const GroupAudioCall = () => {
-  const { callId, isCaller, image, name } = useLocation()?.state || {};
+  const { callId, isCaller } = useLocation()?.state || {};
   const navigate = useNavigate();
-  const [remoteStreams, setRemoteStreams] = useState([]);
+  const [remoteStreams, setRemoteStreams] = useState([]); // but now store objects
   const [peerInfo, setPeerInfo] = useState({});
   const remoteAudioRefs = useRef({});
   const [inCall, setInCall] = useState(false);
 
+  const image = localStorage.getItem("myImage"), name = localStorage.getItem("myName"), groupId = localStorage.getItem("groupId"), groupName = localStorage.getItem("userName");
+
   const handleRemoteStream = (stream, peerId, info) => {
     setRemoteStreams((prev) => {
-      if (prev.find((s) => s.id === stream.id)) return prev;
-      return [...prev, stream];
+      if (prev.find((s) => s.stream.id === stream.id)) return prev;
+      return [...prev, { peerId, stream }];
     });
 
     if (peerId && info) {
@@ -124,6 +31,7 @@ const GroupAudioCall = () => {
       }));
     }
   };
+
 
   const handleStart = async () => {
     if (tone.callTone) tone.callTone.pause();
@@ -149,67 +57,100 @@ const GroupAudioCall = () => {
     if (isCaller === true || isCaller === "true") {
       handleStart();
     }
+
+    const handelTimer = async (data) => {
+      const isMatch = await isMatchGroup(data.id);
+      if (isMatch && data.id === groupId) setInCall(data.timer);
+    }
+
+    const onlyTowMember = (data) => {
+      if (data.id === groupId) {
+        setTimeout(() => {
+          navigate("/chatroom");
+        }, 500)
+      }
+    }
+
+    socket.on("onRGAC", handelTimer);
+    socket.on("onRGACM2E", onlyTowMember);
+
+    return () => {
+      socket.off("onRGAC", handelTimer);
+      socket.off("onRGACM2E", onlyTowMember);
+    }
+
   }, []);
 
   useEffect(() => {
-    remoteStreams.forEach((stream) => {
-      const audioEl = remoteAudioRefs.current[stream.id];
+    remoteStreams.forEach(({ stream, peerId }) => {
+      const audioEl = remoteAudioRefs.current[peerId];
       if (audioEl && audioEl.srcObject !== stream) {
         audioEl.srcObject = stream;
         audioEl.play().catch((e) => console.warn("Audio playback error:", e));
       }
     });
+
   }, [remoteStreams]);
 
   return (
     <div className="h-screen bg-zinc-900 text-white p-4 relative">
-      <h2 className="text-2xl mb-4">Group Audio Call</h2>
-
+      <h1 className="text-center my-5">{groupName}</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded bg-zinc-800">
-          <p className="text-lg">🎤 You (Audio only)</p>
-        </div>
 
-        {remoteStreams.map((stream) => {
-          const peer = peerInfo[stream.id] || {};
+        {remoteStreams.map(({ stream, peerId }) => {
+          const peer = peerInfo[peerId] || {};
           return (
-            <div key={stream.id} className="bg-zinc-700 p-4 rounded">
+            <div key={peerId} className="bg-zinc-700 p-4 rounded">
               <div className="flex items-center gap-2 ">
-                {peer.image && (
-                  <img
-                    src={peer?.image}
-                    alt={peer?.name}
-                    className="w-6 h-6 rounded-full"
-                  />
-                )}
+                <img
+                  src={peer?.image}
+                  alt={peer?.name}
+                  className="w-8 h-8 rounded-full"
+                />
                 <p className="text-sm font-medium">
-                   <span>{peer?.name || "Peer"} {peer?.role}</span>
+                  <span>{peer?.name || "Peer"} {peer?.role}</span>
                 </p>
               </div>
               <audio
                 autoPlay
-                controls
                 ref={(el) => {
-                  if (el) remoteAudioRefs.current[stream.id] = el;
+                  if (el) remoteAudioRefs.current[peerId] = el;
                 }}
               />
+              {inCall ? <Timer isCallActive={inCall} /> : null}
             </div>
           );
         })}
+
       </div>
 
       <div className="mt-6 flex gap-4 absolute bottom-4 left-[50%] translate-x-[-50%]">
         {isCaller === true || isCaller === "true" ? (
           <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-            <PhoneOff className="text-red-500" onClick={handleLeave} />
+            <PhoneOff className="text-red-500" onClick={() => {
+                handleLeave();
+                if (remoteStreams.length === 1) {
+                  socket.emit("onRGACM2E", { id: groupId });
+                }
+                socket.emit("onRGAC", { id: groupId, timer: false });
+              }} />
           </span>
         ) : (
           <div className="flex w-28 h-auto items-center justify-between">
             <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-              <PhoneOff className="text-red-500" onClick={handleLeave} />
+              <PhoneOff className="text-red-500" onClick={() => {
+                handleLeave();
+                if (remoteStreams.length === 1) {
+                  socket.emit("onRGACM2E", { id: groupId });
+                }
+                socket.emit("onRGAC", { id: groupId, timer: false });
+              }} />
             </span>
             <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-              <Phone className="text-green-500" onClick={handleStart} />
+              <Phone className="text-green-500" onClick={() => {
+                handleStart();
+                socket.emit("onRGAC", { id: groupId, timer: true })
+              }} />
             </span>
           </div>
         )}

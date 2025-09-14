@@ -6,7 +6,6 @@ import Seemore from './Seemore';
 import { Link, useLocation } from "react-router-dom";
 import { submitLength } from './Home';
 import { formatNumber } from "../utils/formatenumber";
-import LoaderContainer from './LoaderContainer';
 import { ToastContainer, toast } from "react-toastify";
 
 const PublicPost = () => {
@@ -72,7 +71,7 @@ const PublicPost = () => {
 
     return (
         <div className='sm:p-4 h-auto' id='postInnerContainer' >
-            <LoaderContainer type={"load"} loadEnd={endLoad} />
+         
             <ToastContainer />
             {
                 posts.map((data, index) => (
