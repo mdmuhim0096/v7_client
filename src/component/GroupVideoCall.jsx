@@ -5,6 +5,7 @@ import { tone } from "../utils/soundprovider";
 import { Phone, PhoneOff } from "lucide-react";
 import socket from "../component/socket";
 import Timer from "../component/Timer";
+import { isMatchGroup } from "../utils/utils";
 
 const GroupVideoCall = () => {
 
@@ -17,7 +18,7 @@ const GroupVideoCall = () => {
 
   const [peerInfo, setPeerInfo] = useState({});
   const name = localStorage.getItem("myName"),
-    image = localStorage.getItem("myImage");
+    image = localStorage.getItem("myImage"), groupId = localStorage.getItem("groupId");
 
   const handleRemoteStream = (stream, peerId, info) => {
     setRemoteStreams((prev) => {
@@ -41,7 +42,7 @@ const GroupVideoCall = () => {
       image,
       role: isCaller ? "caller" : "participant",
     });
-    socket.emit("onGVC", { timer: true });
+    setInCall(true);
   };
 
   useEffect(() => {
@@ -71,8 +72,9 @@ const GroupVideoCall = () => {
   }, [remoteStreams]);
 
   useEffect(() => {
-    const handelTimer = (data) => {
-      setInCall(data.timer)
+    const handelTimer = async (data) => {
+      const isMatch = await isMatchGroup(data.id);
+      if (setInCall(isMatch && data.id === groupId)) setInCall(data.timer)
     },
       handelCallend = (data) => {
         setInCall(data.timer)
@@ -143,7 +145,10 @@ const GroupVideoCall = () => {
               <PhoneOff className="text-red-500" onClick={() => { handleLeave() }} />
             </span>
             <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">
-              <Phone className="text-green-500" onClick={() => { handleStart() }} />
+              <Phone className="text-green-500" onClick={() => {
+                handleStart();
+                socket.emit("onGVC", { timer: true, id: groupId });
+              }} />
             </span>
           </div>}
       </div>
