@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { isMatchGroup } from "../utils/utils";
 import { tone } from '../utils/soundprovider';
+import ClipSlider from './ClipSlider';
 
 const LazyComponent = lazy(() => import("./PublicPost"));
 
@@ -35,6 +36,7 @@ const Home = () => {
                 console.log(error);
             }
         }
+
         getdata();
     }, []);
 
@@ -181,19 +183,58 @@ const Home = () => {
                         <h4>{progileName}</h4>
                     </li>
 
-                    <Link to={"/postform"}><li><CalendarPlus />make a post</li></Link>
-                    <Link to={"/save"}><li><ClipboardList /> save</li></Link>
-                    <Link to={"/"}><li><LayoutDashboard />Dashboard</li></Link>
-                    <Link to={"/settings"}><li><Settings />settings</li></Link>
-                    <Link to={"/"} onClick={() => { logOut() }}><li><LogOut />Log out</li></Link>
+                    <Link to={"/postform"}>
+                        <li>
+                            <CalendarPlus />
+                            make a post
+                        </li>
+                    </Link>
+                    <Link to={"/save"}>
+                        <li>
+                            <ClipboardList />
+                            save
+                        </li>
+                    </Link>
+                    <Link to={"/"}>
+                        <li>
+                            <LayoutDashboard />
+                            Dashboard
+                        </li>
+                    </Link>
+                    <Link to={"/settings"}>
+                        <li>
+                            <Settings />
+                            settings
+                        </li>
+                    </Link>
+                    <Link to={"/"}
+                        onClick={() => { logOut() }}
+                    >
+                        <li>
+                            <LogOut />
+                            Log out
+                        </li>
+                    </Link>
                 </ul>
-                <ul className="w-full h-[88vh] overflow-y-auto relative scroll-smoothm" id='postcontainer'>
-                    <Suspense><LazyComponent /></Suspense>
-                    <div id='toTopBtn' className={`cursor-pointer w-10 h-10 bg-blue-500 rounded-md flex justify-center items-center text-white sticky bottom-2 sm:bottom-4 sm:left-5 ${postLength <= 1.6 ? "hidden" : ""}`} onClick={() => {
-                        const containerHeight = document.getElementById("postcontainer");
-                        scrollDown ? goToBottom() :
-                            containerHeight.scrollTop = 0;
-                    }}>
+                <ul
+                    className="w-full h-[88vh] overflow-y-auto relative scroll-smoothm"
+                    id='postcontainer'
+                >
+                    <div className='py-4 px-7'>
+                        <ClipSlider />
+                    </div>
+                    <Suspense>
+                        <LazyComponent />
+                    </Suspense>
+                    <div
+                        id='toTopBtn'
+                        className={`cursor-pointer w-10 h-10 bg-blue-500 rounded-md flex justify-center items-center text-white sticky bottom-2 sm:bottom-4 sm:left-5 ${postLength <= 1.6 ? "hidden" : ""}`}
+                        onClick={() => {
+                            const containerHeight = document.getElementById("postcontainer");
+                            scrollDown ? goToBottom() :
+                                containerHeight.scrollTop = 0;
+                        }}
+                    >
                         {scrollDown ? <ArrowDown /> : <ArrowUp />}
                     </div>
                 </ul>

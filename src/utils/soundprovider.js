@@ -1,5 +1,6 @@
 export const tone = {
     callTone: document.getElementById("calltone"),
-    notifications: document.getElementById("notifications"),
-    reply: document.getElementById("replay")
+    notifications: document.getElementById("message"),
+    reply: document.getElementById("replay"),
+    alertTone: document.getElementById("notification")
 }

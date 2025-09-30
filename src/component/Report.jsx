@@ -5,6 +5,7 @@ import { MoveLeft } from 'lucide-react';
 import {tone} from "../utils/soundprovider";
 import socket from "./socket";
 import { isMatchGroup } from '../utils/utils';
+import { useEffect } from 'react';
 
 const Report = () => {
     const navigate = useNavigate();

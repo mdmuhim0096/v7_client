@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { startMedia, joinCall, hangUp } from "../utils/groupAudioCallUtils";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -9,6 +8,7 @@ import Timer from "./Timer";
 import { isMatchGroup } from "../utils/utils";
 
 const GroupAudioCall = () => {
+
   const { callId, isCaller } = useLocation()?.state || {};
   const navigate = useNavigate();
   const [remoteStreams, setRemoteStreams] = useState([]); // but now store objects
@@ -31,7 +31,6 @@ const GroupAudioCall = () => {
       }));
     }
   };
-
 
   const handleStart = async () => {
     if (tone.callTone) tone.callTone.pause();
@@ -121,7 +120,6 @@ const GroupAudioCall = () => {
             </div>
           );
         })}
-
       </div>
 
       <div className="mt-6 flex gap-4 absolute bottom-4 left-[50%] translate-x-[-50%]">
@@ -135,6 +133,7 @@ const GroupAudioCall = () => {
                 socket.emit("onRGAC", { id: groupId, timer: false });
               }} />
           </span>
+
         ) : (
           <div className="flex w-28 h-auto items-center justify-between">
             <span className="p-2 hover:bg-zinc-700 duration-100 rounded-full">

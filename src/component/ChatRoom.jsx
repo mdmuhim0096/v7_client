@@ -599,6 +599,8 @@ const ChatRoom = () => {
         axios.post(server_port + "/api/gchat/reply", { rtext, messageType: "reply", sender, image, mtext, realTime, group: localStorage.getItem("groupId") });
         setIsRplay(false);
         setMessage("");
+        socket.emit("gaftersent", null)
+        setTimeout(() => { get_group_chats(localStorage.getItem("groupId")); }, 200)
     };
 
     function changeBgGroup(bgColor, bgImage, bgType) {
@@ -712,7 +714,6 @@ const ChatRoom = () => {
 
     return (
         <div className='sm:flex h-screen overflow-y-auto'>
-            <LoaderContainer type={"load"} loadEnd={endLoad2} />
             <ToastContainer
                 position="top-right"
                 autoClose={1000}

@@ -4,19 +4,19 @@ import { server_port } from './api';
 import axios from 'axios';
 import ShortText from "./ShortText";
 import { MoveLeft } from 'lucide-react';
-import {tone} from "../utils/soundprovider";
+import { tone } from "../utils/soundprovider";
 import { isMatchGroup } from '../utils/utils';
 import socket from "./socket";
 
 const Share = () => {
-    const {callTone} = tone;
+    const { callTone } = tone;
     const friends = useLocation().state?.friends, postId = useLocation().state?.post;
     const [Groups, setGroup] = useState([]);
-
+    const myId = localStorage.getItem("myId");
     useEffect(() => {
         const get_my_groups = async () => {
             try {
-                const res = await axios.get(server_port + "/api/group/myGroup/" + localStorage.getItem("myId"));
+                const res = await axios.get(server_port + "/api/group/myGroup/" + myId);
                 setGroup(res.data.groups.groups)
             } catch (error) {
                 console.log(error);
@@ -38,58 +38,57 @@ const Share = () => {
     const createChatShare = (recevireId, shareId) => {
         const dateTime = getTime();
         const realTime = dateTime.date + " " + dateTime.actual_time;
-        const myId = localStorage.getItem("myId");
+
         axios.post(server_port + "/api/share/sharechat", { senderId: myId, shareId, recevireId, user: myId, realTime });
     }
 
     const createGroupShare = (shareId, group) => {
         const dateTime = getTime();
         const realTime = dateTime.date + " " + dateTime.actual_time;
-        const myId = localStorage.getItem("myId");
-        axios.post(server_port + "/api/share/sharegroup", { sender: myId, realTime, shareId, group, messageType: "share" });
+        axios.post(server_port + "/api/share/sharegroup", { sender: myId, realTime, shareId, group, messageType: "share", user: myId });
     }
 
-        useEffect(() => {
-            const handleIncomingCall = (data) => {
-                if (data.userId === localStorage.getItem("myId")) {
-                    navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
-                    try {
-                        if (callTone) {
-                            callTone?.play();
-                        }
-                    } catch (error) {
-                        console.log(error);
+    useEffect(() => {
+        const handleIncomingCall = (data) => {
+            if (data.userId === localStorage.getItem("myId")) {
+                navigate("/audiocall", { state: { callId: data.callId, userId: data.userId, role: "receiver", info: data.info } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
                     }
+                } catch (error) {
+                    console.log(error);
                 }
             }
-    
-            socket.on("incoming_call_a", handleIncomingCall);
-            return () => {
-                socket.off("incoming_call_a", handleIncomingCall);
-            }
-        }, []);
-    
-        useEffect(() => {
-            const handleIncomingCall = (data) => {
-    
-                if (data.userId === localStorage.getItem("myId")) {
-                    navigate("/v", { state: { callId: data.callId } });
-                    try {
-                        if (callTone) {
-                            callTone?.play();
-                        }
-                    } catch (error) {
-                        console.log(error);
+        }
+
+        socket.on("incoming_call_a", handleIncomingCall);
+        return () => {
+            socket.off("incoming_call_a", handleIncomingCall);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleIncomingCall = (data) => {
+
+            if (data.userId === localStorage.getItem("myId")) {
+                navigate("/v", { state: { callId: data.callId } });
+                try {
+                    if (callTone) {
+                        callTone?.play();
                     }
-                };
-            }
-    
-            socket.on("____incoming_call____", handleIncomingCall);
-            return () => {
-                socket.off("____incoming_call____", handleIncomingCall);
+                } catch (error) {
+                    console.log(error);
+                }
             };
-    
-        }, []);
+        }
+
+        socket.on("____incoming_call____", handleIncomingCall);
+        return () => {
+            socket.off("____incoming_call____", handleIncomingCall);
+        };
+
+    }, []);
 
     useEffect(() => {
         const handelRoom = async (data) => {
@@ -134,7 +133,7 @@ const Share = () => {
             socket.off("join_audio_room", handelRoom);
         }
     }, []);
-    
+
     return (
         <div className='h-screen overflow-y-auto scroll-smooth p-2'>
             <h1 className='my-1 mb-2'>Friends</h1>

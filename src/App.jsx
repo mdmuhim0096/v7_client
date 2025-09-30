@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import Signup from "./component/Signup";
 import Logdin from "./component/Logdin";
 import Profile from "./component/Profile";
@@ -17,7 +17,6 @@ import Save from "./component/Save";
 import ProtectedRoute from "./component/ProtectedRoute";
 import Settings from "./component/Settings";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import socket from "./component/socket";
 import MutualFriend from "./component/MutualFriend";
 import Groupsettings from "./component/Groupsettings";
 import Share from "./component/Share";
@@ -31,35 +30,52 @@ import Report from "./component/Report";
 import GroupAudioCall from "./component/GroupAudiocall";
 import { active, deactivate } from "../src/utils/utils";
 import Force from "./utils/Force";
+import SeeRact from "./component/SeeRact";
+import Clip from "./component/Clip";
 
 const App = () => {
-
-  const [styleSheet, setStyleSheet] = useState("");
+  const [styleSheet, setStyleSheet] = useState({});
 
   useEffect(() => {
-    try {
-      const mydata = async () => {
-        const res = await axios.get(server_port + "/api/people/userStyle", { withCredentials: true })
-        const data = res.data?.data?.styles;
-        setStyleSheet(data);
+    const fetchUserStyle = async () => {
+      try {
+        const res = await axios.get(`${server_port}/api/people/userStyle`, {
+          withCredentials: true,
+        });
+        setStyleSheet(res.data?.data?.styles || {});
+      } catch (err) {
+        console.error("Error fetching user style:", err);
       }
-      mydata();
-    } catch (err) {
-      console.log(err);
     };
-    active();
+    fetchUserStyle();
 
-    window.addEventListener("beforeunload", () => {
-       deactivate();
-    });
-  }, [])
+    active();
+    const beforeUnloadHandler = () => deactivate();
+    window.addEventListener("beforeunload", beforeUnloadHandler);
+
+    // cleanup to prevent memory leaks
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnloadHandler);
+    };
+  }, []);
 
   return (
-    <div className={`${styleSheet?.themebg} ${styleSheet?.textColor} ${styleSheet?.textStyle}`} >
+    <div
+      className={`${styleSheet?.themebg || ""} ${styleSheet?.textColor || ""} ${
+        styleSheet?.textStyle || ""
+      }`}
+    >
       <Force />
       <BrowserRouter basename="/v3/">
         <Routes>
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Logdin />} />
           <Route path="/postform" element={<Postform />} />
@@ -84,11 +100,13 @@ const App = () => {
           <Route path="/commentplate" element={<CommentRenderer />} />
           <Route path="/report" element={<Report />} />
           <Route path="/groupaudiocall" element={<GroupAudioCall />} />
+          <Route path="/allreacts" element={<SeeRact />} />
+          <Route path="/clips" element={<Clip />} />
           <Route path="/*" element={<div className="text-white">Coming Soon!</div>} />
         </Routes>
       </BrowserRouter>
     </div>
-  )
-}
+  );
+};
 
 export default App;

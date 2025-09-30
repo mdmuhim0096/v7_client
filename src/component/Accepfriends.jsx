@@ -16,6 +16,7 @@ const Accepfriends = () => {
     const {callTone} = tone;
     const navigate = useNavigate();
 
+
     useEffect(() => {
         const get_accept = async () => {
             try {

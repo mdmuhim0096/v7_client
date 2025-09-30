@@ -29,7 +29,7 @@ const createPeerConnection = (peerId, onRemoteStream, callId, peerMeta) => {
     const hasVideo = remoteStream.getVideoTracks().some((track) => track.enabled);
     const hasAudio = remoteStream.getAudioTracks().some((track) => track.enabled);
 
-    console.log("📡 Incoming stream from", peerId, { hasVideo, hasAudio });
+    console.log("Incoming stream from", peerId, { hasVideo, hasAudio });
 
     if (hasVideo || hasAudio) {
       onRemoteStream(remoteStream, peerId, peerMeta);
@@ -68,7 +68,7 @@ export const joinCall = async (callId, onRemoteStream, info) => {
         try {
           await pc.addIceCandidate(candidate);
         } catch (err) {
-          console.error("🧨 Failed to add queued candidate:", err);
+          console.error("Failed to add queued candidate:", err);
         }
       }
       candidateQueue.length = 0;
@@ -110,7 +110,7 @@ export const joinCall = async (callId, onRemoteStream, info) => {
         try {
           await pc.addIceCandidate(candidate);
         } catch (err) {
-          console.error("🧨 Failed to add candidate immediately:", err);
+          console.error("Failed to add candidate immediately:", err);
         }
       } else {
         candidateQueue.push(candidate);

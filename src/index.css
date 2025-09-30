@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+
+@layer utilities {
+  .emote:hover>.emote-name {
+    @apply block -top-5
+  }
+}
+
 @layer base {
   form {
     @apply backdrop-blur-2xl w-full rounded-lg p-3 shadow-xl
@@ -12,16 +19,15 @@
   }
 
   button {
-    @apply px-3 py-1 bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 rounded-md hover:bg-gradient-to-l
-    capitalize
+    @apply px-3 py-1 bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 rounded-md hover:bg-gradient-to-l capitalize
   }
 
   body {
     @apply relative
   }
 
-  textarea{
-     @apply w-full my-2 p-2 rounded-lg focus:outline-none bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 duration-150 focus:bg-gradient-to-l min-h-52 resize-none
+  textarea {
+    @apply w-full my-2 p-2 rounded-lg focus:outline-none bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 duration-150 focus:bg-gradient-to-l min-h-52 resize-none
   }
 
   .messageTemp {
