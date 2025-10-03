@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { server_port, myfriends_api } from "./api";
-import { X, Share2, MessageSquareIcon } from "lucide-react";
+import { X, Share2, MessageSquareIcon, ThumbsUp } from "lucide-react";
 import Seemore from "./Seemore";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -183,142 +183,140 @@ const Save = () => {
         <Navbar />
       </div>
       <ToastContainer />
-      {saves?.map((item, index) => {
-        const post = item?.postId;
-        const myLike = post?.likes?.find((like) => like.user === _id_);
-        const topReacts = getTop3React(post?.likes);
-        if (!post) return null;
+      <div className="flex flex-wrap px-2 gap-2">
+        {saves?.map((item, index) => {
+          const post = item?.postId;
+          const myLike = post?.likes?.find((like) => like.user === _id_);
+          const topReacts = getTop3React(post?.likes);
+          if (!post) return null;
 
-        return (
-          <div
-            key={item._id || index}
-            className="sm:w-6/12 mx-auto w-full h-auto rounded-lg p-2 backdrop-blur-md my-5 bg-slate-900"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b-2 border-cyan-700 mb-3">
-              <div className="flex items-center gap-2">
+          return (
+            <div
+              key={item._id || index}
+              className="w-full md:w-[48%] mx-auto h-auto rounded-lg p-2 backdrop-blur-md my-5 bg-slate-900"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center border-b-2 border-cyan-700 mb-3">
+                <div className="flex items-center gap-2">
+                  <img
+                    className="w-10 h-10 rounded-full"
+                    src={post?.postOwner?.image}
+                    alt="owner"
+                  />
+                  <h4>{post?.postOwner?.name}</h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="hover:text-red-500" onClick={() => handleRemoveSave(item._id)}>
+                    <X />
+                  </span>
+                </div>
+              </div>
+
+              {/* Caption */}
+              <div className="my-2">
+                <Seemore text={post.caption} range={200} />
+              </div>
+
+              {/* Media */}
+              {post?.image && !post?.video ? (
                 <img
-                  className="w-10 h-10 rounded-full"
-                  src={post?.postOwner?.image}
-                  alt="owner"
+                  className="rounded-md w-full h-96 object-fill"
+                  src={post?.media}
+                  alt="post"
                 />
-                <h4>{post?.postOwner?.name}</h4>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="hover:text-red-500" onClick={() => handleRemoveSave(item._id)}>
-                  <X />
-                </span>
-              </div>
-            </div>
+              ) : (
+                <video
+                  src={post?.media}
+                  controls
+                  loop
+                  className="w-full rounded-md object-fill h-96"
+                />
+              )}
 
-            {/* Caption */}
-            <div className="my-2">
-              <Seemore text={post.caption} range={200} />
-            </div>
-
-            {/* Media */}
-            {post?.image && !post?.video ? (
-              <img
-                className="rounded-md w-full max-h-96 object-fill"
-                src={post?.media}
-                alt="post"
-              />
-            ) : (
-              <video
-                src={post?.media}
-                controls
-                loop
-                className="object-fill w-full h-[250px] sm:h-[300px] md:h-[350px] rounded-lg"
-              />
-            )}
-
-            <footer className="h-auto">
-              <div className="w-full h-auto flex justify-between items-center">
-                <span className={`flex items-center my-1 rounded-md px-1 cursor-pointer shadow-md`}>
-                  {topReacts.map(([type], i) => (
-                    <img
-                      key={i}
-                      src={`./assets/react_icons/${type === "love" ? "heart" : type}.png`}
-                      className="w-5 h-5"
-                      alt={type}
-                    />
-                  ))}
-                  <span className="mx-2">{formatNumber(post?.likes?.length)}</span>
-                </span>
-                <span>
-                </span>
-                <span>
-                  <span className="mx-2">share</span>
-                  {formatNumber(post?.share.length)}
-                </span>
-              </div>
-
-              <div className="flex">
-                {/* LIKE */}
-                <div className="post_footer w-4/12">
-                  <div
-                    onMouseEnter={() =>
-                      setTimeout(() => showPlate(true, index + "$" + post?._id), 100)
-                    }
-                    onMouseLeave={() => showPlate(false, index + "$" + post?._id)}
-                  >
-                    <ReactPlate
-                      index={index + "$" + post?._id}
-                      postId={post?._id}
-                      type="post"
-                      onReturn={async (t) => {
-                        await alertLike(
-                          post?.postOwner?._id,
-                          _id_,
-                          post?._id,
-                          t
-                        );
-                        reloadData(t);
-                      }}
-                      color={"bg-zinc-800"}
-                    />
-
-                    {myLike ? (
+              <footer className="h-auto">
+                <div className="w-full h-auto flex justify-between items-center">
+                  <span className={`flex items-center my-1 rounded-md px-1 cursor-pointer shadow-md`}>
+                    {topReacts.map(([type], i) => (
                       <img
-                        src={`./assets/react_icons/${myLike.type === "love" ? "heart" : myLike.type
-                          }.png`}
-                        className="w-8 h-8"
-                        alt="my-like"
+                        key={i}
+                        src={`./assets/react_icons/${type === "love" ? "heart" : type}.png`}
+                        className="w-5 h-5"
+                        alt={type}
                       />
-                    ) : (
-                      <img
-                        src="./assets/react_icons/beforelike.png"
-                        className="w-8 h-8"
-                        alt="before-like"
-                      />
-                    )}
-                  </div>
+                    ))}
+                    <span className="mx-2">{formatNumber(post?.likes?.length)}</span>
+                  </span>
+                  <span>
+                  </span>
+                  <span>
+                    <span className="mx-2">share</span>
+                    {formatNumber(post?.share.length)}
+                  </span>
                 </div>
 
-                {/* COMMENT */}
-                <Link
-                  to="/commentplate"
-                  state={{ post_id: post?._id }}
-                  className="post_footer w-4/12 justify-center"
-                  onClick={() =>
-                    localStorage.setItem("back_page", location.pathname)
-                  }
-                >
-                  <MessageSquareIcon />
-                  {formatNumber(post?.comments?.length)}
-                </Link>
+                <div className="flex">
+                  {/* LIKE */}
+                  <div className="post_footer w-4/12">
+                    <div
+                      onMouseEnter={() =>
+                        setTimeout(() => showPlate(true, index + "$" + post?._id), 100)
+                      }
+                      onMouseLeave={() => showPlate(false, index + "$" + post?._id)}
+                    >
+                      <ReactPlate
+                        index={index + "$" + post?._id}
+                        postId={post?._id}
+                        type="post"
+                        onReturn={async (t) => {
+                          await alertLike(
+                            post?.postOwner?._id,
+                            _id_,
+                            post?._id,
+                            t
+                          );
+                          reloadData(t);
+                        }}
+                        color={"bg-zinc-800"}
+                      />
 
-                {/* SHARE */}
-                <span className="post_footer w-4/12 justify-end">
-                  <Link to="/share" state={{ friends, post: post?._id }}>
-                    <Share2 />
+                      {myLike ? (
+                        <img
+                          src={`./assets/react_icons/${myLike.type === "love" ? "heart" : myLike.type
+                            }.png`}
+                          className="w-8 h-8"
+                          alt="my-like"
+                        />
+                      ) : (
+                        <ThumbsUp />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* COMMENT */}
+                  <Link
+                    to="/commentplate"
+                    state={{ post_id: post?._id }}
+                    className="post_footer w-4/12 justify-center"
+                    onClick={() =>
+                      localStorage.setItem("back_page", location.pathname)
+                    }
+                  >
+                    <MessageSquareIcon />
+                    {formatNumber(post?.comments?.length)}
                   </Link>
-                </span>
-              </div>
-            </footer>
-          </div>
-        );
-      })}
+
+                  {/* SHARE */}
+                  <span className="post_footer w-4/12 justify-end">
+                    <Link to="/share" state={{ friends, post: post?._id }}>
+                      <Share2 />
+                    </Link>
+                  </span>
+                </div>
+              </footer>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

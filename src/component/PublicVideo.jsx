@@ -195,120 +195,122 @@ const PublicVideo = () => {
             <div className='sticky top-0 z-50'>
                 <Navbar />
             </div>
-            {
-                videos?.map((data, index) => {
-                    const myLike = data?.likes?.find((like) => like.user === _id_);
-                    const topReacts = getTop3React(data?.likes);
+            <div className='w-full h-auto flex flex-wrap gap-3'>
+                {
+                    videos?.map((data, index) => {
+                        const myLike = data?.likes?.find((like) => like.user === _id_);
+                        const topReacts = getTop3React(data?.likes);
 
-                    return (
-                        <div key={index} className='mx-auto h-auto rounded-lg p-2 backdrop-blur-md my-5 bg-slate-900'>
-                            <div className='flex justify-between items-center border-b-2 border-cyan-700 mb-3'>
-                                <div className='flex justify-between items-center gap-2'>
-                                    <img className='w-10 h-10 rounded-full' src={data?.postOwner?.image} />
-                                    <h4>{data?.postOwner?.name}</h4>
+                        return (
+                            <div key={index} className='w-full md:w-[48%] h-auto rounded-lg p-2 backdrop-blur-md my-5 bg-slate-900'>
+                                <div className='flex justify-between items-center border-b-2 border-cyan-700 mb-3'>
+                                    <div className='flex justify-between items-center gap-2'>
+                                        <img className='w-10 h-10 rounded-full' src={data?.postOwner?.image} />
+                                        <h4>{data?.postOwner?.name}</h4>
+                                    </div>
+                                    <div className='flex justify-between items-center gap-2'>
+                                        <Ellipsis size={48} strokeWidth={1.5} absoluteStrokeWidth onClick={() => { setIsSave(true); setIdForSave(data?._id); menuContext() }} />
+                                        <X onClick={() => { remove_post(data?._id) }} className='hover:text-red-500' />
+                                    </div>
                                 </div>
-                                <div className='flex justify-between items-center gap-2'>
-                                    <Ellipsis size={48} strokeWidth={1.5} absoluteStrokeWidth onClick={() => { setIsSave(true); setIdForSave(data?._id); menuContext() }} />
-                                    <X onClick={() => { remove_post(data?._id) }} className='hover:text-red-500' />
+                                <div className='my-2'>
+                                    <Seemore text={data?.caption} range={200} />
                                 </div>
-                            </div>
-                            <div className='my-2'>
-                                <Seemore text={data?.caption} range={200} />
-                            </div>
-                            <video className="object-fill w-full h-[300px] md:h-[58vh] rounded-lg" src={data?.media} controls loop ></video>
-                            <footer className="h-auto">
-                                <div className="w-full h-auto flex justify-between items-center">
-                                    <span
-                                        onClick={() => { seallreact(data?._id) }}
-                                        className={`flex items-center my-1 rounded-md px-1 cursor-pointer shadow-md `}>
-                                        {topReacts.map(([type], i) => (
-                                            <img
-                                                key={i}
-                                                src={`./assets/react_icons/${type === "love" ? "heart" : type}.png`}
-                                                className="w-5 h-5"
-                                                alt={type}
-                                            />
-                                        ))}
-                                        <span className="mx-2">{formatNumber(data?.likes?.length)}</span>
-                                    </span>
-                                    <span>
-                                    </span>
-                                    <span>
-                                        <span className="mx-2">share</span>
-                                        {formatNumber(data?.share.length)}
-                                    </span>
-                                </div>
-
-                                <div className="flex">
-                                    {/* LIKE */}
-                                    <div className="post_footer w-4/12">
-                                        <div
-                                            onMouseEnter={() =>
-                                                setTimeout(() => showPlate(true, index), 100)
-                                            }
-                                            onMouseLeave={() => showPlate(false, index)}
-                                        >
-                                            <ReactPlate
-                                                index={index}
-                                                postId={data?._id}
-                                                type="post"
-
-                                                onReturn={async (t) => {
-                                                    await alertLike(
-                                                        data?.postOwner?._id,
-                                                        _id_,
-                                                        data?._id,
-                                                        t
-                                                    );
-                                                    reloadData(t)
-                                                }}
-
-                                                color={"bg-zinc-800"}
-                                            />
-
-                                            {myLike ? (
+                                <video className="object-fill w-full h-[300px] md:h-[58vh] rounded-lg" src={data?.media} controls loop ></video>
+                                <footer className="h-auto">
+                                    <div className="w-full h-auto flex justify-between items-center">
+                                        <span
+                                            onClick={() => { seallreact(data?._id) }}
+                                            className={`flex items-center my-1 rounded-md px-1 cursor-pointer shadow-md `}>
+                                            {topReacts.map(([type], i) => (
                                                 <img
-                                                    src={`./assets/react_icons/${myLike.type === "love" ? "heart" : myLike.type
-                                                        }.png`}
-                                                    className="w-8 h-8"
-                                                    alt="my-like"
+                                                    key={i}
+                                                    src={`./assets/react_icons/${type === "love" ? "heart" : type}.png`}
+                                                    className="w-5 h-5"
+                                                    alt={type}
                                                 />
-                                            ) : (
-                                                <img
-                                                    src="./assets/react_icons/beforelike.png"
-                                                    className="w-8 h-8"
-                                                    alt="before-like"
-                                                />
-                                            )}
-                                        </div>
+                                            ))}
+                                            <span className="mx-2">{formatNumber(data?.likes?.length)}</span>
+                                        </span>
+                                        <span>
+                                        </span>
+                                        <span>
+                                            <span className="mx-2">share</span>
+                                            {formatNumber(data?.share.length)}
+                                        </span>
                                     </div>
 
-                                    {/* COMMENT */}
-                                    <Link
-                                        to="/commentplate"
-                                        state={{ post_id: data?._id }}
-                                        className="post_footer w-4/12 justify-center"
-                                        onClick={() =>
-                                            localStorage.setItem("back_page", location.pathname)
-                                        }
-                                    >
-                                        <MessageSquareIcon />
-                                        {formatNumber(data?.comments?.length)}
-                                    </Link>
+                                    <div className="flex">
+                                        {/* LIKE */}
+                                        <div className="post_footer w-4/12">
+                                            <div
+                                                onMouseEnter={() =>
+                                                    setTimeout(() => showPlate(true, index), 100)
+                                                }
+                                                onMouseLeave={() => showPlate(false, index)}
+                                            >
+                                                <ReactPlate
+                                                    index={index}
+                                                    postId={data?._id}
+                                                    type="post"
 
-                                    {/* SHARE */}
-                                    <span className="post_footer w-4/12 justify-end">
-                                        <Link to="/share" state={{ friends, post: data?._id }}>
-                                            <Share2 />
+                                                    onReturn={async (t) => {
+                                                        await alertLike(
+                                                            data?.postOwner?._id,
+                                                            _id_,
+                                                            data?._id,
+                                                            t
+                                                        );
+                                                        reloadData(t)
+                                                    }}
+
+                                                    color={"bg-zinc-800"}
+                                                />
+
+                                                {myLike ? (
+                                                    <img
+                                                        src={`./assets/react_icons/${myLike.type === "love" ? "heart" : myLike.type
+                                                            }.png`}
+                                                        className="w-8 h-8"
+                                                        alt="my-like"
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src="./assets/react_icons/beforelike.png"
+                                                        className="w-8 h-8"
+                                                        alt="before-like"
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* COMMENT */}
+                                        <Link
+                                            to="/commentplate"
+                                            state={{ post_id: data?._id }}
+                                            className="post_footer w-4/12 justify-center"
+                                            onClick={() =>
+                                                localStorage.setItem("back_page", location.pathname)
+                                            }
+                                        >
+                                            <MessageSquareIcon />
+                                            {formatNumber(data?.comments?.length)}
                                         </Link>
-                                    </span>
-                                </div>
-                            </footer>
-                        </div>
-                    )
-                })
-            }
 
+                                        {/* SHARE */}
+                                        <span className="post_footer w-4/12 justify-end">
+                                            <Link to="/share" state={{ friends, post: data?._id }}>
+                                                <Share2 />
+                                            </Link>
+                                        </span>
+                                    </div>
+                                </footer>
+                            </div>
+                        )
+                    })
+                }
+
+            </div>
         </div>
     )
 }

@@ -9,6 +9,9 @@ import Seemore from './Seemore';
 import socket from "./socket";
 import { tone } from "../utils/soundprovider";
 import { isMatchGroup } from '../utils/utils';
+import BatteryInfo from './BattryInfo';
+import LocationInfo from "./LocationInfo";
+import DeviceInfo from './Device';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -133,7 +136,7 @@ const Profile = () => {
         <div className='absolute bottom-0 left-0'>
           <img src={user?.image} className='w-24 h-24 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full shadow-2xl m-3' alt='profile' />
           <div onClick={() => setEditState(prev => ({ ...prev, image: true }))}
-               className='w-10 h-10 rounded-full bg-slate-600 absolute top-5 right-5 flex justify-center items-center'>
+            className='w-10 h-10 rounded-full bg-slate-600 absolute top-5 right-5 flex justify-center items-center'>
             <Pencil />
           </div>
         </div>
@@ -161,7 +164,7 @@ const Profile = () => {
           <h4 className='text-2xl md:text-5xl font-semibold'>{user.name}</h4>
           {/* Edit Name */}
           <span onClick={() => { setEditState(prev => ({ ...prev, name: true })); setFormData(prev => ({ ...prev, name: user.name })); }}
-                className={`border-2 bg-slate-600 rounded-full w-10 h-10 flex justify-center items-center p-1 ${!editState.name ? "block" : "hidden"}`}>
+            className={`border-2 bg-slate-600 rounded-full w-10 h-10 flex justify-center items-center p-1 ${!editState.name ? "block" : "hidden"}`}>
             <Pencil />
           </span>
           {editState.name && (
@@ -221,11 +224,15 @@ const Profile = () => {
           </div>
         </div>
       </div>
+      <div className='w-[100%] h-auto md:h-56 gap-2 grid sm:grid-cols-2 md:grid-cols-3 '>
+        <BatteryInfo />
+        <LocationInfo />
+        <DeviceInfo />
+      </div>
 
       {/* User Posts */}
       <div className='relative md:p-4'>
-        <h1 className='capitalize md:text-4xl font-bold'>Your Posts</h1>
-        <br />
+        <h1 className='capitalize md:text-4xl font-bold mt-14 text-center'>Your Posts</h1>
         <Mypost />
       </div>
     </section>
@@ -245,7 +252,7 @@ const InfoCard = ({ label, value, editState, formData, setFormData, setEditState
         <div className='flex items-center justify-start'>
           <h4>{label}: {value}</h4>
           <span onClick={() => { setEditState(prev => ({ ...prev, [fieldKey]: true })); setFormData(prev => ({ ...prev, [fieldKey]: value })); }}
-                className={`border-2 bg-slate-600 rounded-full w-5 h-5 flex justify-center items-center p-1 mx-3 ${!editState[fieldKey] ? "block" : "hidden"}`}>
+            className={`border-2 bg-slate-600 rounded-full w-5 h-5 flex justify-center items-center p-1 mx-3 ${!editState[fieldKey] ? "block" : "hidden"}`}>
             <Pencil />
           </span>
           {editState[fieldKey] && (

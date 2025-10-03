@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { server_port, myfriends_api } from "./api";
-import { Ellipsis, X, Share2, MessageSquareIcon, Save } from "lucide-react";
+import { Ellipsis, X, Share2, MessageSquareIcon, Save, ThumbsUp } from "lucide-react";
 import Seemore from "./Seemore";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { submitLength } from "./Home";
@@ -297,11 +297,7 @@ const PublicPost = () => {
                           alt="my-like"
                         />
                       ) : (
-                        <img
-                          src="./assets/react_icons/beforelike.png"
-                          className="w-8 h-8"
-                          alt="before-like"
-                        />
+                        <ThumbsUp />
                       )}
                     </div>
                   </div>

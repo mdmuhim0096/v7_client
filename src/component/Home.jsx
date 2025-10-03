@@ -11,6 +11,9 @@ import { useNavigate } from 'react-router-dom';
 import { isMatchGroup } from "../utils/utils";
 import { tone } from '../utils/soundprovider';
 import ClipSlider from './ClipSlider';
+import BattryInfo from "./BattryInfo"
+import LocationInfo from "./LocationInfo";
+import DeviceInfo from './Device';
 
 const LazyComponent = lazy(() => import("./PublicPost"));
 
@@ -238,7 +241,11 @@ const Home = () => {
                         {scrollDown ? <ArrowDown /> : <ArrowUp />}
                     </div>
                 </ul>
-                <ul className="w-5/12 p-2 h-[89vh] overflow-y-auto hidden sm:block"></ul>
+                <ul className="w-5/12 p-2 h-[89vh] overflow-y-auto hidden sm:flex flex-col gap-4">
+                        <BattryInfo />
+                        <LocationInfo />
+                        <DeviceInfo />
+                </ul>
             </div>
         </div>
     )
