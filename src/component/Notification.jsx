@@ -31,7 +31,6 @@ const Notification = () => {
         get_noti();
     }, [load]);
 
-    console.log(notifications);
 
     const deleteNotification = (id) => {
         axios.post(server_port + "/api/noti/delete", { id }).then(res => {

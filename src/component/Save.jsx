@@ -235,7 +235,9 @@ const Save = () => {
 
               <footer className="h-auto">
                 <div className="w-full h-auto flex justify-between items-center">
-                  <span className={`flex items-center my-1 rounded-md px-1 cursor-pointer shadow-md`}>
+                  <span className={`flex items-center my-1 rounded-md px-1 cursor-pointer shadow-md`}
+                    onClick={() => { navigate("/allreacts", { state: { postId: item?.postId?._id } }) }}
+                  >
                     {topReacts.map(([type], i) => (
                       <img
                         key={i}

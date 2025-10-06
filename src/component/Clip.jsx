@@ -238,7 +238,10 @@ const Clip = () => {
                     </div>
                     <div className='w-full h-auto absolute bottom-4 left-0'>
                         <div className='w-full h-auto flex justify-between items-center'>
-                            <div className='flex items-center px-2'>
+                            <div
+                                className='flex items-center px-2 cursor-pointer'
+                                onClick={() => { navigate("/allreacts", { state: { postId: visibleClip[currentIndex]?._id } }) }}
+                            >
                                 {getTop3React(visibleClip[currentIndex]?.likes)?.map((icon, idx) => (
                                     <img
                                         src={`./assets/react_icons/${icon[0] === "love" ? "heart" : icon[0]}.png`}

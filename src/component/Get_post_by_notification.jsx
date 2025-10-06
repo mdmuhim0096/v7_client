@@ -1,5 +1,5 @@
-// GetPostByNotification.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Share2, MessageSquareIcon } from "lucide-react";
@@ -53,6 +53,8 @@ const GetPostByNotification = () => {
 
     fetchPost();
   }, [postId, loadData]);
+
+  console.log(posts);
 
   /** Fetch friends once */
   useEffect(() => {
@@ -119,7 +121,7 @@ const GetPostByNotification = () => {
 
   /** Attach socket listeners */
   useSocketNavigation("incoming_call_a", handleIncomingCallAudio);
-  useSocketNavigation("incoming_call_v", handleIncomingCallVideo); // changed to cleaner name
+  useSocketNavigation("incoming_call_v", handleIncomingCallVideo);
   useSocketNavigation("join_room", handleGroupVideo);
   useSocketNavigation("join_audio_room", handleGroupAudio);
 
@@ -162,7 +164,17 @@ export default GetPostByNotification;
 /** ---------- POST CARD COMPONENT ---------- **/
 const PostCard = ({ data, friends, onReturn }) => {
   const location = useLocation();
+  const navigate = useNavigate(); // ✅ fix added here
   const _id_ = localStorage.getItem("myId");
+
+  const reactIcons = {
+    like: "like.png",
+    love: "heart.png",
+    haha: "haha.png",
+    wow: "wow.png",
+    sad: "sad.png",
+    angry: "angry.png"
+  };
 
   const getTop3React = (reactArray = []) => {
     const reactObject = {};
@@ -174,19 +186,8 @@ const PostCard = ({ data, friends, onReturn }) => {
       .slice(0, 3);
   };
 
-  const showPlate = (e, index) => {
-    const Plate = document.getElementById(`react_plate_${index}`);
-    if (!Plate) return;
-    if (e) {
-      Plate.classList.remove("hidden");
-      Plate.classList.add("flex");
-    } else {
-      Plate.classList.remove("flex");
-      Plate.classList.add("hidden");
-    }
-  };
-
   const myLike = data?.likes?.find((like) => String(like.user) === String(_id_));
+  const myReactIcon = reactIcons[myLike?.type] || "beforelike.png";
 
   return (
     <div className="mx-auto w-full sm:w-7/12 md:h-auto rounded-lg border p-2 backdrop-blur-md my-5 bg-slate-900">
@@ -225,11 +226,14 @@ const PostCard = ({ data, friends, onReturn }) => {
       <footer className="mt-2">
         <div className="flex justify-between items-center mb-2">
           {/* Top reactions */}
-          <span className='flex items-center gap-1'>
+          <span
+            className='flex items-center gap-1 cursor-pointer'
+            onClick={() => navigate("/allreacts", { state: { postId: data._id } })}
+          >
             {getTop3React(data?.likes).map(([type]) => (
               <img
                 key={type}
-                src={`./assets/react_icons/${type === "love" ? "heart" : type}.png`}
+                src={`./assets/react_icons/${reactIcons[type] == "love" ? "heart" : reactIcons[type]}`}
                 className="w-5 h-5"
                 alt={type}
               />
@@ -243,31 +247,18 @@ const PostCard = ({ data, friends, onReturn }) => {
         <div className="flex justify-between mt-1">
           {/* Like */}
           <div className="post_footer w-4/12 cursor-pointer">
-            <div
-              onMouseEnter={() => showPlate(true, data._id)}
-              onMouseLeave={() => showPlate(false, data._id)}
-            >
-              <ReactPlate
-                index={data._id}
-                postId={data?._id}
-                type="post"
-                color={"bg-zinc-900"}
-                onReturn={onReturn}
-              />
-              {myLike ? (
-                <img
-                  src={`./assets/react_icons/${myLike.type === "love" ? "heart" : myLike.type}.png`}
-                  className="w-8 h-8"
-                  alt="my-like"
-                />
-              ) : (
-                <img
-                  src="./assets/react_icons/beforelike.png"
-                  className="w-8 h-8"
-                  alt="before-like"
-                />
-              )}
-            </div>
+            <ReactPlate
+              index={data._id}
+              postId={data?._id}
+              type="post"
+              color="bg-zinc-900"
+              onReturn={onReturn}
+            />
+            <img
+              src={`./assets/react_icons/${myReactIcon}`}
+              className="w-8 h-8"
+              alt="react-icon"
+            />
           </div>
 
           {/* Comment */}

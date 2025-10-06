@@ -287,7 +287,7 @@ const Publicprofile = () => {
                             <span className='text-3xl text-gray-600 text-center block capitalize font-bold my-5'>No posts</span>
                         ) : (
                             <div className='w-full flex flex-wrap'>
-                                {posts.map((data, index) => {
+                                {posts?.map((data, index) => {
                                     const myLike = data?.likes?.find((like) => like.user === _id_);
                                     const topReacts = getTop3React(data?.likes);
 

@@ -29,7 +29,6 @@ import CommentRenderer from "./component/CommentRenderer";
 import Report from "./component/Report";
 import GroupAudioCall from "./component/GroupAudiocall";
 import { active, deactivate } from "../src/utils/utils";
-import Force from "./utils/Force";
 import SeeRact from "./component/SeeRact";
 import Clip from "./component/Clip";
 
@@ -63,9 +62,9 @@ const App = () => {
     <div
       className={`${styleSheet?.themebg || ""} ${styleSheet?.textColor || ""} ${
         styleSheet?.textStyle || ""
-      }`}
+      } relative`}
     >
-      <Force />
+
       <BrowserRouter basename="/v3/">
         <Routes>
           <Route

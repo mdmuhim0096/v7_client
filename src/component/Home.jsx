@@ -16,7 +16,6 @@ import LocationInfo from "./LocationInfo";
 import DeviceInfo from './Device';
 
 const LazyComponent = lazy(() => import("./PublicPost"));
-
 let postLength = 0;
 
 export const submitLength = (l) => {
@@ -173,8 +172,10 @@ const Home = () => {
 
     return (
         <div className='relative h-screen overflow-hidden'>
-            <div className='w-full sm:flex sm:items-center sm:justify-between sticky top-0 sm:px-2 pb-2'>
-                <SearchBar />
+            <div className='w-full sm:flex sm:items-center sm:justify-between sticky top-0 sm:px-2 pb-2 z-[60]'>
+                <span className='hidden sm:inline-block'>
+                    <SearchBar isMobile={false} />
+                </span>
                 <Navbar />
             </div>
             <div className='w-full flex justify-between overflow-x-hidden'>
@@ -185,7 +186,9 @@ const Home = () => {
                         <img className='w-12 h-12 rounded-full border' src={profileImage} />
                         <h4>{progileName}</h4>
                     </li>
-
+                    <li className='sm:hidden'>
+                        <SearchBar isMobile={true} />
+                    </li>
                     <Link to={"/postform"}>
                         <li>
                             <CalendarPlus />
@@ -242,9 +245,9 @@ const Home = () => {
                     </div>
                 </ul>
                 <ul className="w-5/12 p-2 h-[89vh] overflow-y-auto hidden sm:flex flex-col gap-4">
-                        <BattryInfo />
-                        <LocationInfo />
-                        <DeviceInfo />
+                    <BattryInfo />
+                    <LocationInfo />
+                    <DeviceInfo />
                 </ul>
             </div>
         </div>
