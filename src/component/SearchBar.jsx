@@ -8,10 +8,9 @@ const SearchBar = ({ isMobile = false }) => {
     const [isShow, setIsShow] = useState(false);
     const searchTypes = ["people", "group", "post"];
     const [type, setType] = useState("");
-    const [value, setValue] = useState("");
+    const [value, setValue] = useState(" ");
     const [data, setData] = useState([]);
 
-    // fetch data only when type & value change
     useEffect(() => {
         const fetchData = async () => {
             if (!type || !value.trim()) {
@@ -33,18 +32,25 @@ const SearchBar = ({ isMobile = false }) => {
 
     return (
         <div
-            className={`justify-between items-center gap-2 sm:flex backdrop-blur-lg ${isMobile ? "absolute" : "relative"} ${isMobile && isShow ? "top-0 z-10" : ""} w-full`}
+            className={`justify-between items-center gap-2 sm:flex backdrop-blur-lg  ${isMobile === true && isShow === true ? "absolute left-0 top-0 z-10" : ""} w-full`}
         >
-            <input
-                type="search"
-                placeholder="search here"
-                className={`p-[5.5px] placeholder:text-[16px] ${isMobile ? "w-full" : ""}`}
-                onFocus={() => setIsShow(true)}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-            />
+            <span className="relative">
+                <input
+                    type="search"
+                    placeholder="search here"
+                    className={`p-[5.5px] placeholder:text-[16px] ${isMobile ? "w-full" : ""}`}
+                    onFocus={() => setIsShow(true)}
+                    value={value}
+                    onChange={(e) => {
+                        setValue(e.target.value);
+                    }}
+                />
+                <span
+                    className={`w-6 h-6 absolute right-0 top-0 transform -translate-y-[10%] sm:hidden ${!value.trim() ? "hidden" : ""}`}
+                    onClick={() => { setIsShow(false); setValue("") }}
+                ></span>
+            </span>
 
-            {/* search type buttons */}
             <div className={`${isShow ? "flex gap-2" : "hidden"}`}>
                 {searchTypes.map((item) => (
                     <span
@@ -61,7 +67,7 @@ const SearchBar = ({ isMobile = false }) => {
             {/* search result box */}
             {data.length > 0 && (
                 <div
-                    className={`flex flex-col w-full p-2 h-[90vh] top-12 absolute overflow-y-auto ${isMobile ? "bg-zinc-900" : "backdrop-blur-md"}`}
+                    className={`flex flex-col w-full p-2 h-[90vh] top-12 absolute overflow-y-auto ${isMobile === true ? "bg-zinc-900" : "backdrop-blur-md"}`}
                 >
                     {data.map((item, index) => (
                         type == "post" ?
