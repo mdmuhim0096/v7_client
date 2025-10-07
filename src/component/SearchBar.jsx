@@ -67,7 +67,7 @@ const SearchBar = ({ isMobile = false }) => {
             {/* search result box */}
             {data.length > 0 && (
                 <div
-                    className={`flex flex-col w-full p-2 h-[90vh] top-12 absolute overflow-y-auto ${isMobile === true ? "bg-zinc-900" : "backdrop-blur-md"}`}
+                    className={`flex flex-col w-full p-2 h-[90vh] top-12 absolute overflow-y-auto bg-zinc-900`}
                 >
                     {data.map((item, index) => (
                         type == "post" ?

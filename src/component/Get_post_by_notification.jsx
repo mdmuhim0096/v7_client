@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -162,6 +161,7 @@ const GetPostByNotification = () => {
 export default GetPostByNotification;
 
 /** ---------- POST CARD COMPONENT ---------- **/
+
 const PostCard = ({ data, friends, onReturn }) => {
   const location = useLocation();
   const navigate = useNavigate(); // ✅ fix added here
@@ -233,7 +233,7 @@ const PostCard = ({ data, friends, onReturn }) => {
             {getTop3React(data?.likes).map(([type]) => (
               <img
                 key={type}
-                src={`./assets/react_icons/${reactIcons[type] == "love" ? "heart" : reactIcons[type]}`}
+                src={`./assets/react_icons/${reactIcons[type]}`}
                 className="w-5 h-5"
                 alt={type}
               />

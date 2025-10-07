@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
 import axios from 'axios';
 import Navbar from './Navbar';
 import socket from './socket';
